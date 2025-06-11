@@ -1,12 +1,15 @@
 import os
+import logging
 import discord
 from discord.ext import commands
-import logging
+from motor.motor_asyncio import AsyncIOMotorClient
+
+logging.basicConfig(level=logging.INFO)
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# List your cogs/extensions
+# Load all your cogs on startup
 initial_extensions = [
     'cogs.cleanup_cog',
     'cogs.dm_response',
@@ -25,21 +28,32 @@ async def on_ready():
     print('------')
 
 async def setup():
+    # Load cogs/extensions
     for ext in initial_extensions:
         try:
             await bot.load_extension(ext)
+            logging.info(f"Loaded extension {ext}")
         except Exception as e:
-            print(f'Failed to load extension {ext}: {e}')
+            logging.error(f'Failed to load extension {ext}: {e}')
 
 if __name__ == '__main__':
     import asyncio
 
-    # Load your Discord bot token from the environment variable
+    # Load environment variables
     token = os.environ.get('DISCORD_TOKEN')
+    mongo_uri = os.environ.get('MONGODB_URI')
+    db_name = 'GPTStudios'
+
     if not token:
         raise ValueError("DISCORD_TOKEN environment variable is not set!")
+    if not mongo_uri:
+        raise ValueError("MONGODB_URI environment variable is not set!")
 
-    # Run bot with setup, then start
+    # Attach MongoDB client to the bot before loading cogs
+    mongo_client = AsyncIOMotorClient(mongo_uri)
+    bot.mongo_db = mongo_client[db_name]
+
+    # Run setup and start the bot
     async def runner():
         await setup()
         await bot.start(token)
