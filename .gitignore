@@ -1,0 +1,55 @@
+gitignore
+# Byte-compiled files
+__pycache__/
+*.pyc
+*.pyo
+
+# Distribution / packaging
+.Python
+build/
+dist/
+eggs/
+*.egg-info/
+.tox/
+
+# Virtual environment
+venv/
+env/
+.venv/
+.direnv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Sphinx documentation
+docs/_build/
+
+# Jupyter Notebook files
+.ipynb_checkpoints
+
+# Tests
+.coverage
+.cache
+
+# misc
+instance/
+.webassets-cache
+
+# Django specific (if applicable)
+media/
+
+#dotenv
+.env
