@@ -1,37 +1,23 @@
-# Use an official Python runtime as a parent image
+# Use official Python runtime as a parent image
 FROM python:3.10
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
-COPY . /app
-
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Run main.py when the container launches
-CMD ["python", "main.py"]
-
-
-
-# Use an official Python runtime as a parent image
-FROM python:3.10
-
-# Set the working directory in the container
-WORKDIR /app
-
-# Copy the current directory contents into the container at /app
-COPY . /app
-
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Install OpenCV dependencies
-RUN apt-get update && apt-get install -y \
+# Install OpenCV, Tesseract OCR, and required system dependencies (before pip install!)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     libgl1-mesa-glx \
     tesseract-ocr \
-    tesseract-ocr-eng
+    tesseract-ocr-eng && \
+    rm -rf /var/lib/apt/lists/*
 
-# Run bot.py when the container launches
-CMD ["python", "bot.py"]
+# Copy your app code into the container
+COPY . /app
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Set default command to run your main bot file
+CMD ["python", "main.py"]
+
