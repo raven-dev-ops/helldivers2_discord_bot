@@ -11,7 +11,6 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 # Load all your cogs on startup
 initial_extensions = [
-    'cogs.cleanup_cog',
     'cogs.dm_response',
     'cogs.guild_management_cog',
     'cogs.leaderboard_cog',
@@ -20,6 +19,7 @@ initial_extensions = [
     'cogs.sos_cog',
     'cogs.sos_view',
     'cogs.extract_cog',
+    'cogs.cleanup_cog',
 ]
 
 @bot.event
