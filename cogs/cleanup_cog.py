@@ -17,21 +17,33 @@ class CleanupCog(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         logging.info("CleanupCog is ready.")
-        if not hasattr(self.bot, 'cleanup_setup_done'):
-            self.bot.cleanup_setup_done = True
 
+        # Only run once (for hot reloads / dev convenience)
+        if getattr(self.bot, "cleanup_setup_done", False):
+            return
+        self.bot.cleanup_setup_done = True
+
+        # Wait for SOSCog and GuildManagementCog to be loaded (max 5 seconds)
+        retries = 5
+        for attempt in range(retries):
             self.sos_cog = self.bot.get_cog("SOSCog")
             self.guild_management_cog = self.bot.get_cog("GuildManagementCog")
-            if not self.sos_cog or not self.guild_management_cog:
-                logging.warning("SOSCog or GuildManagementCog not loaded. CleanupCog cannot function properly.")
-                return
+            if self.sos_cog and self.guild_management_cog:
+                break
+            logging.info(f"CleanupCog waiting for SOSCog and GuildManagementCog... ({attempt+1}/{retries})")
+            await asyncio.sleep(1)
 
-            # Start the periodic cleanup if not already running
-            if not self.periodic_cleanup.is_running():
-                self.periodic_cleanup.start()
+        # Final check
+        if not self.sos_cog or not self.guild_management_cog:
+            logging.warning("SOSCog or GuildManagementCog not loaded after waiting. CleanupCog cannot function properly.")
+            return
 
-            # Perform one-time cleanup on startup
-            await self.perform_startup_cleanup()
+        # Start the periodic cleanup if not already running
+        if not self.periodic_cleanup.is_running():
+            self.periodic_cleanup.start()
+
+        # Perform one-time cleanup on startup
+        await self.perform_startup_cleanup()
 
     @tasks.loop(hours=1)
     async def periodic_cleanup(self):
@@ -52,7 +64,6 @@ class CleanupCog(commands.Cog):
             gpt_channel_id = server_data.get("gpt_channel_id")
             gpt_channel = guild.get_channel(gpt_channel_id)
             if not gpt_channel or not isinstance(gpt_channel, discord.TextChannel):
-                # Guard: gpt_channel might be None or a CategoryChannel, etc.
                 logging.warning(f"GPT channel for guild '{guild.name}' not found or not a TextChannel.")
                 continue
 
@@ -107,10 +118,8 @@ class CleanupCog(commands.Cog):
         """
         try:
             async for message in gpt_channel.history(limit=100):
-                # Check for messages from the bot that have an embed
                 if message.author == self.bot.user and message.embeds:
                     embed = message.embeds[0]
-                    # Check for SOS or menu embed
                     if embed.title == "SOS ACTIVATED":
                         logging.info(f"Deleting old SOS message in '{guild.name}' (Message ID: {message.id}).")
                         await message.delete()
@@ -122,4 +131,3 @@ class CleanupCog(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(CleanupCog(bot))
-
