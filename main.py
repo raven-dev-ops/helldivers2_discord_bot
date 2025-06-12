@@ -9,7 +9,6 @@ logging.basicConfig(level=logging.INFO)
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# Load all your cogs on startup
 initial_extensions = [
     'cogs.dm_response',
     'cogs.guild_management_cog',
@@ -26,9 +25,9 @@ initial_extensions = [
 async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
+    print('Cogs loaded:', list(bot.cogs.keys()))  # See actual registered cog class names
 
 async def setup():
-    # Load cogs/extensions
     for ext in initial_extensions:
         try:
             await bot.load_extension(ext)
@@ -39,7 +38,6 @@ async def setup():
 if __name__ == '__main__':
     import asyncio
 
-    # Load environment variables
     token = os.environ.get('DISCORD_TOKEN')
     mongo_uri = os.environ.get('MONGODB_URI')
     db_name = 'GPTStudios'
@@ -49,11 +47,9 @@ if __name__ == '__main__':
     if not mongo_uri:
         raise ValueError("MONGODB_URI environment variable is not set!")
 
-    # Attach MongoDB client to the bot before loading cogs
     mongo_client = AsyncIOMotorClient(mongo_uri)
     bot.mongo_db = mongo_client[db_name]
 
-    # Run setup and start the bot
     async def runner():
         await setup()
         await bot.start(token)
