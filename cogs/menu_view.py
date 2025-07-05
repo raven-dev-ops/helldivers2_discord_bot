@@ -155,8 +155,7 @@ class MenuViewCog(commands.Cog):
             #         logging.warning(f"No server data or invite link found in DB for clan '{clan_name}' (Server ID: {clan_server_id}). Using placeholder link.")
 
             embed_description = (
-                f"**{alliance_links_md}**\n\n"
-                "**How To Use:**\n"
+                "**How To Use:**\n\n"
                 "- **CALL SOS**: Quickly send an SOS for any mission (touchscreens).\n\n"
                 "- **MAKE LFG**: Customize your SOS mission by selecting various options "
                 "(Enemy Type, Difficulty, Play Style, Voice Comms, and Notes).\n\n"
