@@ -162,13 +162,15 @@ class MenuViewCog(commands.Cog):
                 "- **REGISTER**: Register your Helldivers 2 player name in your allied server to claim your clan.\n\n"
                 "- **SUBMIT STATS**: Submit your mission stats screenshots for the Leaderboard.\n\n"
                 "**Notes:**\n\n"
-                " **1280x720 > 1920x1080 | No Snippets, Use Full-Screen Shot | Wide/Curved Monitor Not Supported"
+                " **1280x720 > 1920x1080**\n\n"
+                " **No Snippets, Use Full-Screen Shot**\n\n"
+                " **Wide/Curved Monitor Not Supported**\n\n"
                 "Click the invite link to join the SOS voice channel!\n\n"
                 "*Please choose an option below:*"
             )
 
             embed = discord.Embed(
-                title="HELLDIVERS SOS LFG NETWORK!",
+                title="GPT SOS LFG NETWORK",
                 description=embed_description,
                 color=discord.Color.blue()
             )
