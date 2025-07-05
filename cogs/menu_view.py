@@ -161,17 +161,18 @@ class MenuViewCog(commands.Cog):
             embed_description = (
                 f"**{alliance_links_md}**\n\n"
                 "**Instructions:**\n"
-                "- **LAUNCH SOS**: Quickly send an SOS for any mission (touchscreens).\n\n"
-                "- **CREATE MISSION**: Customize your SOS mission by selecting various options "
+                "- **CALL SOS**: Quickly send an SOS for any mission (touchscreens).\n\n"
+                "- **MAKE LFG**: Customize your SOS mission by selecting various options "
                 "(Enemy Type, Difficulty, Play Style, Voice Comms, and Notes).\n\n"
-                "- **REGISTRATION**: Register your Helldivers 2 player name in your allied server to claim your clan.\n\n"
+                "- **REGISTER**: Register your Helldivers 2 player name in your allied server to claim your clan.\n\n"
+                "- **SUBMIT STATS**: Submit your mission stats screenshots for the Leaderboard.\n\n"
                 "**Notes:** Created voice channels/SOS embeds will expire after **60 seconds** of inactivity.\n\n"
                 "Click the invite link to join the SOS voice channel!\n\n"
                 "*Please choose an option below:*"
             )
 
             embed = discord.Embed(
-                title="Welcome to the GPT LFG Network!",
+                title="Helldiver2 SOS LFG Network!",
                 description=embed_description,
                 color=discord.Color.blue()
             )
