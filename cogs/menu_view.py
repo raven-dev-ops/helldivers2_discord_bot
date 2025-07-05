@@ -112,8 +112,8 @@ class MenuViewCog(commands.Cog):
         logging.info("MenuViewCog is ready.")
         # You can add logic here to send the menu to specific guilds on startup if desired.
         # Example:
-        # for guild in self.bot.guilds:
-        #     await self.send_sos_menu_to_guild(guild) # Caution: sends every startup
+        for guild in self.bot.guilds:
+            await self.send_sos_menu_to_guild(guild) # Caution: sends every startup
 
 
     async def send_sos_menu_to_guild(self, guild: discord.Guild):
