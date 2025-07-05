@@ -5,13 +5,6 @@ from discord.ext import commands
 import logging
 import os
 
-# Map each clan name to the ID of the guild where we store the invite link
-CLAN_SERVER_IDS = {
-    "Guardians of Freedom": 1172948128509468742,
-    "Heck Snorkelers": 1221490168670715936,
-    "Galactic Phantom Taskforce": 1214787549655203862,
-}
-
 # Define the path to the image file relative to where the bot is run
 IMAGE_PATH = "gpt_network.png"
 
@@ -144,20 +137,19 @@ class MenuViewCog(commands.Cog):
                 logging.warning(f"GPT channel (ID: {gpt_channel_id}) not found in guild '{guild.name}'. Cannot send SOS menu.")
                 return
 
-            # For each clan, retrieve the invite link from the corresponding server in MongoDB
-            alliance_link_chunks = []
-            for clan_name, clan_server_id in CLAN_SERVER_IDS.items():
-                clan_server_data = await server_listing.find_one({"discord_server_id": clan_server_id})
-                invite_link = "https://discord.gg/unknown" # Default placeholder
-                if clan_server_data and "discord_invite_link" in clan_server_data:
-                    invite_link = clan_server_data["discord_invite_link"]
-                else:
-                    logging.warning(f"No server data or invite link found in DB for clan '{clan_name}' (Server ID: {clan_server_id}). Using placeholder link.")
-
+            # # For each clan, retrieve the invite link from the corresponding server in MongoDB
+            # alliance_link_chunks = []
+            # for clan_name, clan_server_id in CLAN_SERVER_IDS.items():
+            #     clan_server_data = await server_listing.find_one({"discord_server_id": clan_server_id})
+            #     invite_link = "https://discord.gg/unknown" # Default placeholder
+            #     if clan_server_data and "discord_invite_link" in clan_server_data:
+            #         invite_link = clan_server_data["discord_invite_link"]
+            #     else:
+            #         logging.warning(f"No server data or invite link found in DB for clan '{clan_name}' (Server ID: {clan_server_id}). Using placeholder link.")
 
             embed_description = (
                 f"**{alliance_links_md}**\n\n"
-                "**Instructions:**\n"
+                "**How To Use:**\n"
                 "- **CALL SOS**: Quickly send an SOS for any mission (touchscreens).\n\n"
                 "- **MAKE LFG**: Customize your SOS mission by selecting various options "
                 "(Enemy Type, Difficulty, Play Style, Voice Comms, and Notes).\n\n"
@@ -170,7 +162,7 @@ class MenuViewCog(commands.Cog):
             )
 
             embed = discord.Embed(
-                title="Helldiver2 SOS LFG Network!",
+                title="HELLDIVERS SOS LFG NETWORK!",
                 description=embed_description,
                 color=discord.Color.blue()
             )
