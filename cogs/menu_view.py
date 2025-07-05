@@ -30,7 +30,7 @@ class SOSMenuView(discord.ui.View):
         # e.g., discord.Intents.all() or specific intents like discord.Intents.interactions
 
     # Button callbacks remain as you provided them in the base code
-    @discord.ui.button(label="LAUNCH SOS", style=discord.ButtonStyle.danger, custom_id="launch_sos_button", disabled=False)
+    @discord.ui.button(label="CALL SOS", style=discord.ButtonStyle.danger, custom_id="launch_sos_button", disabled=False)
     async def launch_sos_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         sos_cog = self.bot.get_cog("SOSCog")
         if sos_cog:
@@ -50,7 +50,7 @@ class SOSMenuView(discord.ui.View):
                 ephemeral=True
             )
 
-    @discord.ui.button(label="CREATE LFG", style=discord.ButtonStyle.primary, custom_id="create_mission_button")
+    @discord.ui.button(label="MAKE LFG", style=discord.ButtonStyle.success, custom_id="create_mission_button")
     async def create_mission_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         sos_view_cog = self.bot.get_cog("SOSViewCog")
         if sos_view_cog:
@@ -74,7 +74,7 @@ class SOSMenuView(discord.ui.View):
                 ephemeral=True
             )
 
-    @discord.ui.button(label="REGISTER", style=discord.ButtonStyle.success, custom_id="register_button")
+    @discord.ui.button(label="REGISTER", style=discord.ButtonStyle.primary, custom_id="register_button")
     async def register_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         register_modal_cog = self.bot.get_cog("RegisterModalCog")
         if register_modal_cog:
@@ -95,7 +95,7 @@ class SOSMenuView(discord.ui.View):
 
     @discord.ui.button(
         label="SUBMIT STATS", 
-        style=discord.ButtonStyle.secondary,
+        style=discord.ButtonStyle.primary,
         custom_id="submit_stats_button"
     )
     async def submit_stats_button(self, interaction: discord.Interaction, button: discord.ui.Button):
