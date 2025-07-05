@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     token = os.environ.get('DISCORD_TOKEN')
     mongo_uri = os.environ.get('MONGODB_URI')
-    db_name = 'GPTStudios'
+    db_name = 'GPTHellbot'
 
     if not token:
         raise ValueError("DISCORD_TOKEN environment variable is not set!")
