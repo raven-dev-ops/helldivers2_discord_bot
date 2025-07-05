@@ -163,7 +163,8 @@ class MenuViewCog(commands.Cog):
                 "(Enemy Type, Difficulty, Play Style, Voice Comms, and Notes).\n\n"
                 "- **REGISTER**: Register your Helldivers 2 player name in your allied server to claim your clan.\n\n"
                 "- **SUBMIT STATS**: Submit your mission stats screenshots for the Leaderboard.\n\n"
-                "**Notes:** Created voice channels/SOS embeds will expire after **60 seconds** of inactivity.\n\n"
+                "**Notes:**\n\n"
+                " **1280x720 > 1920x1080 | No Snippets, Use Full-Screen Shot | Wide/Curved Monitor Not Supported"
                 "Click the invite link to join the SOS voice channel!\n\n"
                 "*Please choose an option below:*"
             )
