@@ -279,6 +279,14 @@ class ExtractCog(commands.Cog):
             msg = await self.bot.wait_for("message", check=check, timeout=60.0)
             image = msg.attachments[0]
             img_bytes = await image.read()
+            # --- DELETE THE USER MESSAGE ASAP! ---
+            try:
+                await msg.delete()
+            except discord.Forbidden:
+                logger.warning(f"Failed to delete user's image message (no permission): {msg.id}")
+            except Exception as e:
+                logger.error(f"Failed to delete user's image message {msg.id}: {e}")
+
             img_pil = Image.open(BytesIO(img_bytes))
             img_cv = np.array(img_pil)
             regions = define_regions(img_cv.shape)
