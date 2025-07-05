@@ -433,7 +433,7 @@ class GuildManagementCog(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         logging.info("GuildManagementCog is ready.")
-        logging.info("Starting guild setup for all joined guilds on startup.")
+        logging.info("Starting guild setup for allowed guilds on startup.")
         allowed_guild_ids = [1172948128509468742, 1221490168670715936, 1214787549655203862]
 
         for guild in self.bot.guilds:
