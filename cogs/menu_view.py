@@ -95,18 +95,18 @@ class SOSMenuView(discord.ui.View):
 
     @discord.ui.button(
         label="SUBMIT STATS", 
-        style=discord.ButtonStyle.secondary, 
+        style=discord.ButtonStyle.secondary,
         custom_id="submit_stats_button"
     )
     async def submit_stats_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
+        extract_cog = self.bot.get_cog("ExtractCog")
+        if extract_cog:
+            await extract_cog.submit_stats_button_flow(interaction)
+        else:
             await interaction.response.send_message(
-                "To submit your mission stats for official reporting, use the `/extract` command in this server and upload your mission screenshot image.\n\n"
-                "Make sure your Discord account is registered and your screenshot is clear for the best results.",
+                "The stats submission system is not available at the moment. Please try again later.",
                 ephemeral=True
             )
-        except Exception as e:
-            logging.error(f"Error in submit_stats_button: {e}")
 
 class MenuViewCog(commands.Cog):
     """
