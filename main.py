@@ -31,6 +31,7 @@ async def load_cogs():
         'cogs.sos_cog',
         'cogs.cleanup_cog',
         'cogs.dm_response',
+        'cogs.menu_view',
         'cogs.extract_cog',
     ]
     for cog in cogs:
