@@ -1,6 +1,7 @@
 import os
 import logging
 import discord
+import traceback
 from discord.ext import commands
 from motor.motor_asyncio import AsyncIOMotorClient
 
@@ -59,4 +60,5 @@ if __name__ == '__main__':
         await load_cogs()
         await bot.start(token)
 
-    asyncio.run(runner())
+    if __name__ == "__main__":
+        asyncio.run(runner())
