@@ -49,18 +49,18 @@ class PromotionCog(commands.Cog):
             logging.error(f"Error handling role assignment for {member.display_name}: {e}")
 
     async def fetch_completed_missions(self, user_id):
-        """Fetch the number of completed missions for a user."""
+        """Fetch the number of completed missions for a user (count of submitted stat entries)."""
         try:
             mongo_client = await get_mongo_client()
             db = mongo_client['GPTHellbot']
             stats_collection = db['User_Stats']
-            
-            logging.info(f"Attempting to fetch stats for user ID: {user_id}")
-            user_stats = await stats_collection.find_one({"user_id": str(user_id)})
-            logging.info(f"User stats found for {user_id}: {user_stats is not None}")
-            return user_stats.get('Completed_Missions', 0) if user_stats else None
+
+            logging.info(f"Attempting to count submissions for user ID: {user_id}")
+            # Accept both int and string representations for robustness
+            count = await stats_collection.count_documents({"discord_id": {"$in": [user_id, str(user_id)]}})
+            return count
         except Exception as e:
             logging.error(f"Error fetching completed missions for user {user_id}: {e}")
-            return None
+            return 0
 async def setup(bot):
     await bot.add_cog(PromotionCog(bot))

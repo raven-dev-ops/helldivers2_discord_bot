@@ -48,12 +48,12 @@ class ArrivalCog(commands.Cog):
 
             # Create a registration document for the new user
             new_registration = {
-                "discord_id": str(member.id),
-                "discord_server_id": str(member.guild.id),
+                "discord_id": member.id,
+                "discord_server_id": member.guild.id,
                 "player_name": member.name.strip(),  # Discord username
                 "server_name": member.guild.name.strip(),
                 "server_nickname": member.display_name.strip(),
-                "registered_at": datetime.utcnow().isoformat()
+                "registered_at": datetime.utcnow()
             }
 
             # Insert the new user into the Alliance collection

@@ -8,7 +8,8 @@ MENU_VIEW_TITLES = [
     "Welcome to the SOS Alliance Network!",
     "GPT SOS LFG NETWORK",
     "HELLDIVERS SOS LFG NETWORK!",
-    "Welcome to the GPT LFG Network!"
+    "Welcome to the GPT LFG Network!",
+    "GPT HELLDIVER NETWORK"
 ]
 
 class CleanupCog(commands.Cog):

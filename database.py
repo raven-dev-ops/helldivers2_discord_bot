@@ -13,10 +13,22 @@ import re
 logger = logging.getLogger(__name__)
 
 # MongoDB Client and Database
-client = None # Global client variable
-registration_collection = db[REGISTRATION_COLLECTION]
-stats_collection = db[STATS_COLLECTION]
-server_listing_collection = db[SERVER_LISTING_COLLECTION]
+client: Optional[AsyncIOMotorClient] = None  # Global client handle (lazy)
+
+async def get_mongo_client() -> AsyncIOMotorClient:
+    """
+    Initializes and returns the MongoDB client (singleton per process).
+    """
+    global client
+    if client is None:
+        client = AsyncIOMotorClient(MONGODB_URI)
+        logger.info("MongoDB client initialized.")
+    return client
+
+async def get_db():
+    """Return the application's database handle lazily."""
+    mongo_client = await get_mongo_client()
+    return mongo_client[DATABASE_NAME]
 
 from ocr_processing import clean_ocr_result
 
@@ -38,27 +50,15 @@ def normalize_name(name: str) -> str:
     return name
 
 ################################################
-# MONGO CLIENT AND INDEX MANAGEMENT
+# MONGO INDEX MANAGEMENT
 ################################################
-
-async def get_mongo_client() -> AsyncIOMotorClient:
-    """
-    Initializes and returns the MongoDB client.
-    """
-    global client
-    if client is None:
-        client = AsyncIOMotorClient(MONGODB_URI)
-        logger.info("MongoDB client initialized.")
-    return client
 
 async def create_indexes():
     """
     Ensures necessary indexes are created on startup.
     """
     try:
-        client = await get_mongo_client()
-        db = client[DATABASE_NAME]
-        
+        db = await get_db()
         await db[STATS_COLLECTION].create_index("server_nickname")
         await db[REGISTRATION_COLLECTION].create_index("player_name")
         await db[REGISTRATION_COLLECTION].create_index("discord_id")
@@ -67,6 +67,8 @@ async def create_indexes():
         logger.info("MongoDB indexes created/ensured.")
     except Exception as e:
         logger.error(f"Error creating MongoDB indexes: {e}")
+
+################################################
 # SERVER LISTING LOOKUPS
 ################################################
 
@@ -75,7 +77,8 @@ async def get_server_listing_by_id(discord_server_id: int) -> Optional[Dict[str,
     Returns the Server_Listing doc for the given guild ID, or None if not found.
     """
     try:
-        doc = await server_listing_collection.find_one({"discord_server_id": discord_server_id})
+        db = await get_db()
+        doc = await db[SERVER_LISTING_COLLECTION].find_one({"discord_server_id": discord_server_id})
         if doc:
             logger.debug(f"Fetched Server_Listing for guild {discord_server_id}: {doc}")
         return doc
@@ -92,7 +95,8 @@ async def get_registered_users() -> List[Dict[str, Any]]:
     Fetch all users in the Alliance registration collection.
     """
     try:
-        docs = await registration_collection.find(
+        db = await get_db()
+        docs = await db[REGISTRATION_COLLECTION].find(
             {},
             {"player_name": 1, "discord_id": 1, "discord_server_id": 1, "_id": 0}
         ).to_list(length=None)
@@ -105,11 +109,13 @@ async def get_registered_users() -> List[Dict[str, Any]]:
 async def get_registered_user_by_discord_id(discord_id: int) -> Optional[Dict[str, Any]]:
     """
     Find a user in the Alliance collection by their discord_id.
+    Accept both int and string representations for robustness.
     """
     try:
-        doc = await registration_collection.find_one(
-            {"discord_id": discord_id},
-            {"player_name": 1, "_id": 0}
+        db = await get_db()
+        doc = await db[REGISTRATION_COLLECTION].find_one(
+            {"discord_id": {"$in": [discord_id, str(discord_id)]}},
+            {"player_name": 1, "discord_server_id": 1, "_id": 0}
         )
         if doc:
             logger.info(f"Found registered user for discord_id {discord_id}: {doc.get('player_name','Unknown')}")
@@ -184,8 +190,9 @@ def find_best_match(
 
 async def insert_player_data(players_data: List[Dict[str, Any]], submitted_by: str):
     """
-    Insert each player's stats data into the stats_collection.
+    Insert each player's stats data into the stats collection.
     """
+    db = await get_db()
     for player in players_data:
         doc = {
             "player_name": player.get("player_name", "Unknown"),
@@ -202,7 +209,7 @@ async def insert_player_data(players_data: List[Dict[str, Any]], submitted_by: s
             "submitted_at": datetime.utcnow()
         }
         try:
-            await stats_collection.insert_one(doc)
+            await db[STATS_COLLECTION].insert_one(doc)
             logger.info(f"Inserted player data for {doc['player_name']}, submitted by {submitted_by}.")
         except Exception as e:
             logger.error(f"Failed to insert player data for {doc['player_name']}: {e}")
@@ -219,7 +226,8 @@ async def get_clan_name_by_discord_server_id(discord_server_id: Any) -> str:
         return "N/A"
     try:
         int_server_id = int(discord_server_id)
-        doc = await server_listing_collection.find_one({"discord_server_id": int_server_id})
+        db = await get_db()
+        doc = await db[SERVER_LISTING_COLLECTION].find_one({"discord_server_id": int_server_id})
         if doc and "discord_server_name" in doc:
             return doc["discord_server_name"]
         return "N/A"

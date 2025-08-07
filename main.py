@@ -61,5 +61,4 @@ if __name__ == '__main__':
         await load_cogs()
         await bot.start(token)
 
-    if __name__ == "__main__":
-        asyncio.run(runner())
+    asyncio.run(runner())
