@@ -457,5 +457,20 @@ class GuildManagementCog(commands.Cog):
         except Exception as e:
             logging.error(f"Error setting up new guild '{guild.name}': {e}")
 
+    @commands.Cog.listener()
+    async def on_guild_remove(self, guild: discord.Guild):
+        """
+        When the bot is removed from a guild, prune its Server_Listing entry to avoid stale records.
+        """
+        try:
+            server_listing = self.bot.mongo_db['Server_Listing']
+            result = await server_listing.delete_one({"discord_server_id": guild.id})
+            if result.deleted_count:
+                logging.info(f"Pruned Server_Listing entry for removed guild '{guild.name}' (ID: {guild.id}).")
+            else:
+                logging.info(f"No Server_Listing entry found to prune for removed guild '{guild.name}' (ID: {guild.id}).")
+        except Exception as e:
+            logging.error(f"Failed to prune Server_Listing on guild removal for '{guild.name}' (ID: {guild.id}): {e}")
+
 async def setup(bot):
     await bot.add_cog(GuildManagementCog(bot))

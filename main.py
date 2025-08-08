@@ -7,6 +7,23 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 logging.basicConfig(level=logging.INFO)
 
+# Add filter to reduce noisy discord reconnect logs
+class DiscordNoiseFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        msg = str(record.getMessage())
+        # Suppress benign reconnect/close messages
+        if "Attempting a reconnect" in msg:
+            return False
+        if "WebSocket closed with 1000" in msg:
+            return False
+        return True
+
+# Apply filter and set discord log level
+discord_logger = logging.getLogger("discord")
+discord_logger.setLevel(logging.WARNING)
+for handler in logging.getLogger().handlers:
+    handler.addFilter(DiscordNoiseFilter())
+
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True

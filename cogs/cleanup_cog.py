@@ -65,7 +65,13 @@ class CleanupCog(commands.Cog):
             guild_id = server_data.get("discord_server_id")
             guild = self.bot.get_guild(guild_id)
             if not guild:
-                logging.warning(f"Guild with ID {guild_id} not found.")
+                try:
+                    # Prune stale server listing entries for guilds the bot is no longer in
+                    server_listing = self.bot.mongo_db['Server_Listing']
+                    await server_listing.delete_one({"discord_server_id": guild_id})
+                    logging.info(f"Pruned stale Server_Listing entry for missing guild ID {guild_id}.")
+                except Exception as e:
+                    logging.error(f"Failed to prune stale Server_Listing entry for guild ID {guild_id}: {e}")
                 continue
 
             gpt_channel_id = server_data.get("gpt_channel_id")
@@ -95,7 +101,13 @@ class CleanupCog(commands.Cog):
 
             guild = self.bot.get_guild(guild_id)
             if not guild:
-                logging.warning(f"Guild with ID {guild_id} not found. Skipping cleanup.")
+                try:
+                    # Prune stale server listing entries for guilds the bot is no longer in
+                    server_listing = self.bot.mongo_db['Server_Listing']
+                    await server_listing.delete_one({"discord_server_id": guild_id})
+                    logging.info(f"Pruned stale Server_Listing entry for missing guild ID {guild_id} during startup cleanup.")
+                except Exception as e:
+                    logging.error(f"Failed to prune stale Server_Listing entry for guild ID {guild_id} during startup cleanup: {e}")
                 continue
 
             # 1) Remove leftover 'SOS QRF#' channels that are empty
