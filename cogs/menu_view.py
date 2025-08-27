@@ -149,18 +149,18 @@ class MenuViewCog(commands.Cog):
                 return
 
             embed_description = (
-                "**How To Use:**\n\n"
-                "- **CALL SOS**: Quickly send an SOS for any mission (touchscreens).\n\n"
-                "- **MAKE LFG**: Customize your SOS mission by selecting various options "
+                "**GALACTIC PHANTOM TASKFORCE BOT MENU**"
+                "- **CALL SOS**: Quickly send an SOS for any missions. (touchscreens)\n\n"
+                "- **MAKE LFG**: Customize your SOS mission by selecting various options"
                 "(Enemy Type, Difficulty, Play Style, Voice Comms, and Notes).\n\n"
-                "- **REGISTER**: Register your Helldivers 2 player name in your allied server to claim your clan.\n\n"
-                "- **SUBMIT STATS**: Submit your mission stats screenshots for the Leaderboard.\n\n"
-                "**Notes:**\n\n"
+                "- **REGISTER**: Register your Helldivers 2 player name.\n\n"
+                "- **SUBMIT STATS**: Submit your screenshots for mission stats to the database.\n\n"
+                "\n\n"
                 " **1280x720 > 1920x1080**\n\n"
                 " **No Snippets, Use Full-Screen Shot**\n\n"
-                " **Wide/Curved Monitor Not Supported**\n\n"
-                "Click the invite link to join the SOS voice channel!\n\n"
-                "*Please choose an option below:*"
+                " **Wide/Curved Monitor Support Coming Soon**\n\n"
+                "Click the generated invite link to join created SOS vc!\n\n"
+                "*Please select an option below:*"
             )
 
             embed = discord.Embed(

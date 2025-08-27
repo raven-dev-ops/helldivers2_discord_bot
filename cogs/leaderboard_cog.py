@@ -211,12 +211,12 @@ class LeaderboardCog(commands.Cog):
         for i in range(num_pages):
             batch = leaderboard_data[i*batch_size:(i+1)*batch_size]
             embed = discord.Embed(
-                title=f"**{month_str} {now.year} ALLIANCE LEADERBOARD**\n*({focus_title})*",
+                title=f"**{month_str} {now.year} GALACTIC HELLDIVER LEADERBOARD**\n*({focus_title})*",
                 color=discord.Color.blurple()
             )
             if num_pages > 1:
                 embed.title += f" (Page {i+1}/{num_pages})"
-            embed.set_footer(text="Leaderboard updates every 8 hours.")
+            embed.set_footer(text=f"Updated every 12 hours. New Yearly, Monthly, Weekly, Daily, and Solo Leadboards coming soon.")
 
             if image_path and i == 0:
                 embed.set_image(url=f"attachment://{os.path.basename(image_path)}")

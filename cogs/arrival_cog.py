@@ -28,12 +28,7 @@ class ArrivalCog(commands.Cog):
 
             await welcome_channel.send(
                 (
-                    f"Welcome {member.mention} to the server!\n"
-                    f"Thank you for your service and interest in becoming a part of our community!\n"
-                    f"If you have any questions, please ask.\n"
-                    f"If you need moderation, please make a ticket.\n"
-                    f"If you are looking for LFG, use the GPT Network.\n"
-                    f"IRL comes first, everything is viable, and do your best!"
+                    f"Welcome {member.mention} to the front lines!\n"
                 )
             )
 
