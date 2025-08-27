@@ -10,7 +10,6 @@ from datetime import datetime
 CATEGORY_NAME = "GPT NETWORK"
 LEADERBOARD_CHANNEL_NAME = "❗｜leaderboard"
 LEADERBOARD_IMAGE_PATH = "sos_leaderboard.png"
-MIN_GAMES_PLAYED = 3
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(levelname)s:%(name)s: %(message)s')
 logger = logging.getLogger(__name__)
@@ -90,7 +89,7 @@ class LeaderboardCog(commands.Cog):
                     month_str = now.strftime("%B").upper()
                     embed = discord.Embed(
                         title=f"**GPT {month_str} {now.year} LEADERBOARD**",
-                        description=f"No leaderboard data available.\nPlayers must submit at least ({MIN_GAMES_PLAYED}) games to appear!",
+                        description="No leaderboard data available.",
                         color=discord.Color.blue()
                     )
                     file = discord.File(image_path, filename=os.path.basename(image_path)) if image_path else None
@@ -174,22 +173,21 @@ class LeaderboardCog(commands.Cog):
                     players[name]["Clan"] = server_map[server_id]
             leaderboard = []
             for name, d in players.items():
-                if d["games_played"] >= MIN_GAMES_PLAYED:
-                    average_kills = d["kills"] / d["games_played"] if d["games_played"] else 0.0
-                    average_accuracy = (d["shots_hit"] / d["shots_fired"] * 100) if d["shots_fired"] > 0 else 0.0
-                    leaderboard.append({
-                        "player_name": name,
-                        "melee_kills": d["melee_kills"],
-                        "kills": d["kills"],
-                        "deaths": d["deaths"],
-                        "shots_fired": d["shots_fired"],
-                        "shots_hit": d["shots_hit"],
-                        "games_played": d["games_played"],
-                        "Clan": d["Clan"],
-                        "average_kills": average_kills,
-                        "average_accuracy": average_accuracy,
-                        "least_deaths": -d["deaths"],  # Negative for sorting (least at top)
-                    })
+                average_kills = d["kills"] / d["games_played"] if d["games_played"] else 0.0
+                average_accuracy = (d["shots_hit"] / d["shots_fired"] * 100) if d["shots_fired"] > 0 else 0.0
+                leaderboard.append({
+                    "player_name": name,
+                    "melee_kills": d["melee_kills"],
+                    "kills": d["kills"],
+                    "deaths": d["deaths"],
+                    "shots_fired": d["shots_fired"],
+                    "shots_hit": d["shots_hit"],
+                    "games_played": d["games_played"],
+                    "Clan": d["Clan"],
+                    "average_kills": average_kills,
+                    "average_accuracy": average_accuracy,
+                    "least_deaths": -d["deaths"],  # Negative for sorting (least at top)
+                })
             if stat_key == "least_deaths":
                 leaderboard.sort(key=lambda x: (x[stat_key], -x["games_played"]))  # fewest deaths, most games
             else:
@@ -218,7 +216,7 @@ class LeaderboardCog(commands.Cog):
             )
             if num_pages > 1:
                 embed.title += f" (Page {i+1}/{num_pages})"
-            embed.set_footer(text=f"Leaderboard updates every 8 hours. Minimum {MIN_GAMES_PLAYED} games required.")
+            embed.set_footer(text="Leaderboard updates every 8 hours.")
 
             if image_path and i == 0:
                 embed.set_image(url=f"attachment://{os.path.basename(image_path)}")
