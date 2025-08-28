@@ -90,7 +90,7 @@ class SOSMenuView(discord.ui.View):
             )
 
     @discord.ui.button(
-        label="SUBMIT STATS",
+        label="REPORT STATS",
         style=discord.ButtonStyle.primary,
         custom_id="submit_stats_button"
     )
@@ -151,16 +151,15 @@ class MenuViewCog(commands.Cog):
             embed_description = (
                 "- **CALL SOS**: Quickly send an SOS for any missions. (touchscreens)\n\n"
                 "- **MAKE LFG**: Customize your SOS mission by selecting various options"
-                "(Enemy Type, Difficulty, Play Style, Voice Comms, and Notes).\n\n"
+                "(Enemy Type, Difficulty, Play Style, Voice Comms, Details).\n\n"
                 "- **REGISTER**: Register your Helldivers 2 player name.\n\n"
-                "- **SUBMIT STATS**: Submit your screenshots for mission stats to the database.\n\n"
+                "- **REPORT STATS**: Submit your screenshots for mission stats to the database.\n\n"
                 "\n"
-                "Click the generated invite link to join created SOS vc!\n\n"
                 "*Please select an option below:*"
             )
 
             embed = discord.Embed(
-                title="GPT HELLDIVER NETWORK",
+                title="GPTF HD2 LFG & SOS NETWORK",
                 description=embed_description,
                 color=discord.Color.blue()
             )
