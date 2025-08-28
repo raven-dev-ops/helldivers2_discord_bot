@@ -266,14 +266,11 @@ class LeaderboardCog(commands.Cog):
                 embed.add_field(
                     name=f"#{idx}. {name}",
                     value=(
-                        f"**Clan:** {player['Clan']}\n"
-                        f"**{focus_title}:** {stat_val_str}\n"
                         f"**Kills:** {player['kills']}\n"
                         f"**Deaths:** {player['deaths']}\n"
                         f"**Accuracy:** {(player['shots_hit'] / player['shots_fired'] * 100 if player['shots_fired'] else 0.0):.1f}%\n"
                         f"**Shots Hit:** {player['shots_hit']}\n"
                         f"**Shots Fired:** {player['shots_fired']}\n"
-                        f"*Games: {player['games_played']}*"
                     ),
                     inline=True
                 )
