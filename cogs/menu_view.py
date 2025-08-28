@@ -155,9 +155,6 @@ class MenuViewCog(commands.Cog):
                 "- **REGISTER**: Register your Helldivers 2 player name.\n\n"
                 "- **SUBMIT STATS**: Submit your screenshots for mission stats to the database.\n\n"
                 "\n"
-                " **Resolution: 1280x720, 1920x1080**\n\n"
-                " **No Snippets, Use Full-Screen Shot**\n\n"
-                " **Wide/Curved Monitor Support Coming Soon**\n\n"
                 "Click the generated invite link to join created SOS vc!\n\n"
                 "*Please select an option below:*"
             )
