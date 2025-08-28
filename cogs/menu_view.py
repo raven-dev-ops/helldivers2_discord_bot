@@ -149,14 +149,13 @@ class MenuViewCog(commands.Cog):
                 return
 
             embed_description = (
-                "**GALACTIC PHANTOM TASKFORCE BOT MENU**"
                 "- **CALL SOS**: Quickly send an SOS for any missions. (touchscreens)\n\n"
                 "- **MAKE LFG**: Customize your SOS mission by selecting various options"
                 "(Enemy Type, Difficulty, Play Style, Voice Comms, and Notes).\n\n"
                 "- **REGISTER**: Register your Helldivers 2 player name.\n\n"
                 "- **SUBMIT STATS**: Submit your screenshots for mission stats to the database.\n\n"
-                "\n\n"
-                " **1280x720 > 1920x1080**\n\n"
+                "\n"
+                " **Resolution: 1280x720, 1920x1080**\n\n"
                 " **No Snippets, Use Full-Screen Shot**\n\n"
                 " **Wide/Curved Monitor Support Coming Soon**\n\n"
                 "Click the generated invite link to join created SOS vc!\n\n"
