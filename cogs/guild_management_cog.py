@@ -74,7 +74,7 @@ class GuildManagementCog(commands.Cog):
         return target_channel
 
     async def setup_guild(self, guild: discord.Guild, force_refresh=False):
-        category_name = "GPT FEATURES"
+        category_name = "GPT NETWORK"
         gpt_channel_name = "❗｜clan-menu"
         monitor_channel_name = "❗｜stat-reports"
         leaderboard_channel_name = "❗｜leaderboard"
