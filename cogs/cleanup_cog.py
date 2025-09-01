@@ -5,10 +5,7 @@ import logging
 import asyncio
 
 MENU_VIEW_TITLES = [
-    "Welcome to the SOS Alliance Network!",
-    "GPT SOS LFG NETWORK",
-    "HELLDIVERS SOS LFG NETWORK!",
-    "Welcome to the GPT LFG Network!"
+    "GPTFLEET HD2 CLAN MENU",
 ]
 
 class CleanupCog(commands.Cog):
