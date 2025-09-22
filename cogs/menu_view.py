@@ -69,7 +69,7 @@ class SOSMenuView(discord.ui.View):
     #            ephemeral=True
     #        )
 
-    @discord.ui.button(label="REGISTER", style=discord.ButtonStyle.primary, custom_id="register_button")
+    @discord.ui.button(label="REGISTER NAME", style=discord.ButtonStyle.primary, custom_id="register_button")
     async def register_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         register_modal_cog = self.bot.get_cog("RegisterModalCog")
         if register_modal_cog:
@@ -90,7 +90,7 @@ class SOSMenuView(discord.ui.View):
             )
 
     @discord.ui.button(
-        label="SUBMIT STATS",
+        label="UPLOAD MISSION STATS",
         style=discord.ButtonStyle.primary,
         custom_id="submit_stats_button"
     )

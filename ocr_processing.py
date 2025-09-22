@@ -18,6 +18,7 @@ def adjust_brightness_contrast(image, alpha=1.0, beta=0):
 def perform_ocr(segment, label):
     """Performs OCR on the given segment with several preprocessing steps."""
     try:
+        # Names allow letters, digits, a few Discord-ish glyphs; stats are numeric/percent
         if label == "Name":
             custom_config = r'--oem 3 --psm 7 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ<>#0123456789_ '
         else:
@@ -51,7 +52,7 @@ def perform_ocr(segment, label):
         for preprocess in preprocessing_methods:
             preprocessed_segment = preprocess(segment)
             text = pytesseract.image_to_string(preprocessed_segment, config=custom_config).strip()
-            logger.info(f"OCR raw text for label '{label}': '{text}'")  # <--- LOGGING RAW OCR
+            logger.info(f"OCR raw text for label '{label}': '{text}'")
             if text:
                 return text
         return None
@@ -64,7 +65,13 @@ def clean_ocr_result(text, label):
     if not text:
         return None
 
-    logger.info(f"Original text for label '{label}': '{text}'")  # <--- LOGGING CLEAN INPUT
+    logger.info(f"Original text for label '{label}': '{text}'")
+
+    NUMERIC_FIELDS = {
+        "Shots Fired", "Shots Hit", "Kills", "Deaths", "Melee Kills",
+        # NEW:
+        "Stims Used", "Samples Extracted", "Stratagems Used"
+    }
 
     if label == "Name":
         misreads = {
@@ -77,8 +84,8 @@ def clean_ocr_result(text, label):
         text = re.sub(r'([A-Za-z0-9])([A-Z])$', r'\1', text)
         text = re.sub(r'\s+', ' ', text).strip()
         text = re.sub(r'[^A-Za-z0-9\s]', ' ', text)
-    elif label in ["Shots Fired", "Shots Hit", "Kills", "Deaths", "Melee Kills"]:
-        # Aggressive OCR correction for digits
+    elif label in NUMERIC_FIELDS:
+        # Aggressive OCR correction for digits-only fields
         text = (text.replace('O', '0').replace('o', '0')
                     .replace('l', '1').replace('I', '1')
                     .replace('B', '8').replace('S', '5'))
@@ -88,7 +95,7 @@ def clean_ocr_result(text, label):
     else:
         text = re.sub(r'[^\d]', '', text)
 
-    logger.info(f"Cleaned text for label '{label}': '{text}'")  # <--- LOGGING CLEANED OUTPUT
+    logger.info(f"Cleaned text for label '{label}': '{text}'")
 
     if not text:
         return None
@@ -118,6 +125,11 @@ def process_for_ocr(image, regions, NUM_PLAYERS=None):
         NUM_PLAYERS = max(max_player_index, 2)
     NUM_PLAYERS = min(max(NUM_PLAYERS, 2), 4)  # always at least 2, at most 4
 
+    # Fields we will attempt to read for each player column (must match your region keys)
+    BASE_FIELDS = ['Name', 'Kills', 'Shots Fired', 'Shots Hit', 'Deaths', 'Accuracy', 'Melee Kills']
+    EXTRA_FIELDS = ['Stims Used', 'Samples Extracted', 'Stratagems Used']  # NEW
+    ALL_FIELDS = BASE_FIELDS + EXTRA_FIELDS
+
     player_data = []
     for player_index in range(NUM_PLAYERS):
         player_stats = {}
@@ -125,7 +137,7 @@ def process_for_ocr(image, regions, NUM_PLAYERS=None):
         shots_hit = 0
         ocr_accuracy = None
 
-        for key in ['Name', 'Kills', 'Shots Fired', 'Shots Hit', 'Deaths', 'Accuracy', 'Melee Kills']:
+        for key in ALL_FIELDS:
             label = f"P{player_index + 1} {key}"
             segment = regions.get(label)
             if segment is None:
@@ -169,12 +181,13 @@ def process_for_ocr(image, regions, NUM_PLAYERS=None):
                         ocr_accuracy = None
                 except ValueError:
                     ocr_accuracy = None
-            elif key == "Melee Kills":
+            elif key in {"Melee Kills", "Stims Used", "Samples Extracted", "Stratagems Used"}:
                 try:
                     player_stats[label] = int(cleaned_result)
                 except ValueError:
                     player_stats[label] = 0
             else:
+                # Fallback numeric
                 player_stats[label] = cleaned_result
 
         # Correct Shots Hit if bigger than Shots Fired
@@ -204,7 +217,7 @@ def process_for_ocr(image, regions, NUM_PLAYERS=None):
                 field_key = k
             formatted_player[field_key] = v
 
-        # Ensure Shots Fired, Shots Hit, Melee Kills are integers
+        # Ensure numeric casts
         try:
             formatted_player["Shots Fired"] = shots_fired
         except Exception:
@@ -217,6 +230,12 @@ def process_for_ocr(image, regions, NUM_PLAYERS=None):
             formatted_player["Melee Kills"] = int(formatted_player.get("Melee Kills", 0))
         except Exception:
             formatted_player["Melee Kills"] = 0
+        # NEW numeric fields
+        for nf in ("Stims Used", "Samples Extracted", "Stratagems Used"):
+            try:
+                formatted_player[nf] = int(formatted_player.get(nf, 0))
+            except Exception:
+                formatted_player[nf] = 0
 
         formatted_player["Accuracy"] = f"{accuracy:.1f}%"
 
@@ -256,10 +275,8 @@ def find_best_partial_match(ocr_name: str, registered_names: list[str], threshol
     for db_name in registered_names:
         db_name_lower = db_name.lower()
         ratio_full = SequenceMatcher(None, ocr_name_lower, db_name_lower).ratio() * 100
-        substring_bonus = 0
-        if len(ocr_name_lower) >= min_len and len(db_name_lower) >= min_len:
-            if ocr_name_lower in db_name_lower or db_name_lower in ocr_name_lower:
-                substring_bonus = 20
+        substring_bonus = 20 if (len(ocr_name_lower) >= min_len and len(db_name_lower) >= min_len and
+                                 (ocr_name_lower in db_name_lower or db_name_lower in ocr_name_lower)) else 0
         if abs(len(ocr_name_lower) - len(db_name_lower)) > 3:
             continue
         score = ratio_full + substring_bonus

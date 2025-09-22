@@ -160,7 +160,14 @@ class PlayerSelect(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
         try:
             self.shared_data.selected_player_index = int(self.values[0])
-            fields = ['player_name', 'Kills', 'Accuracy', 'Shots Fired', 'Shots Hit', 'Deaths', 'Melee Kills']
+
+            # UPDATED: Include the new fields so users can edit them
+            fields = [
+                'player_name',
+                'Kills', 'Accuracy', 'Shots Fired', 'Shots Hit', 'Deaths', 'Melee Kills',
+                'Stims Used', 'Samples Extracted', 'Stratagems Used'
+            ]
+
             field_options = [discord.SelectOption(label=f) for f in fields]
             field_select = FieldSelect(field_options, self.shared_data, self.bot)
             view = discord.ui.View()
@@ -411,9 +418,23 @@ class ExtractCog(commands.Cog):
                     ephemeral=True
                 )
                 return
+
             submitter_user = await get_registered_user_by_discord_id(interaction.user.id)
             submitter_player_name = submitter_user.get('player_name', 'Unknown') if submitter_user else 'Unknown'
             logger.info(f"Submitter resolved as '{submitter_player_name}'.")
+
+            # NEW: Normalize expected keys so UI/edit/validation is stable
+            for p in players_data:
+                p.setdefault('Kills', 'N/A')
+                p.setdefault('Accuracy', 'N/A')
+                p.setdefault('Shots Fired', 'N/A')
+                p.setdefault('Shots Hit', 'N/A')
+                p.setdefault('Deaths', 'N/A')
+                p.setdefault('Melee Kills', 'N/A')
+                p.setdefault('Stims Used', 'N/A')
+                p.setdefault('Samples Extracted', 'N/A')
+                p.setdefault('Stratagems Used', 'N/A')
+                p.setdefault('clan_name', 'N/A')
 
             single_embed = build_single_embed(players_data, submitter_player_name)
             shared_data = SharedData(

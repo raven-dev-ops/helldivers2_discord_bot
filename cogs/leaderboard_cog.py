@@ -73,7 +73,7 @@ class LeaderboardCog(commands.Cog):
             
             leaderboard_data = await self.calculate_leaderboard_data(stat_key, now.year, now.month)
             await self.promote_class_a_citizens(leaderboard_data)
-            embeds, image_path = await self.build_leaderboard_embeds(leaderboard_data, title, stat_key)
+            embeds = await self.build_leaderboard_embeds(leaderboard_data, title, stat_key)
             for guild in self.bot.guilds:
                 channel = await self.ensure_leaderboard_channel(guild)
                 if not channel:
@@ -94,16 +94,10 @@ class LeaderboardCog(commands.Cog):
                         description="No leaderboard data available.",
                         color=discord.Color.blue()
                     )
-                    file = discord.File(image_path, filename=os.path.basename(image_path)) if image_path else None
-                    if file:
-                        embed.set_image(url=f"attachment://{os.path.basename(image_path)}")
-                    await channel.send(embed=embed, file=file if file else discord.utils.MISSING)
+                    await channel.send(embed=embed)
                 else:
-                    for idx, embed in enumerate(embeds):
-                        file = None
-                        if image_path and idx == 0:
-                            file = discord.File(image_path, filename=os.path.basename(image_path))
-                        await channel.send(embed=embed, file=file if file else discord.utils.MISSING)
+                    for embed in embeds:
+                        await channel.send(embed=embed)
                         await asyncio.sleep(1.1)
 
     async def promote_class_a_citizens(self, leaderboard_data):
@@ -170,55 +164,52 @@ class LeaderboardCog(commands.Cog):
             db = self.bot.mongo_db if hasattr(self.bot, 'mongo_db') else AsyncIOMotorClient(mongo_uri)['GPTHellbot']
             stats_collection = db['User_Stats']
             alliance_collection = db['Alliance']
-            
-            # Define the date range for the given month
+
+            # Date range for month
             start_of_month = datetime(year, month, 1)
-            if month == 12:
-                end_of_month = datetime(year + 1, 1, 1)
-            else:
-                end_of_month = datetime(year, month + 1, 1)
-            
-            query = {
-                "submitted_at": {
-                    "$gte": start_of_month,
-                    "$lt": end_of_month
-                }
-            }
+            end_of_month = datetime(year + (1 if month == 12 else 0), (1 if month == 12 else month + 1), 1)
+
+            query = {"submitted_at": {"$gte": start_of_month, "$lt": end_of_month}}
 
             servers = await alliance_collection.find({}, {"discord_server_id": 1, "server_name": 1}).to_list(None)
             server_map = {str(s['discord_server_id']): s['server_name'] for s in servers if 'discord_server_id' in s and 'server_name' in s}
-            
+
+            def to_int(v, default=0):
+                try:
+                    # handle "", None, numeric strings, etc.
+                    return int(v) if v not in (None, "") else default
+                except Exception:
+                    return default
+
             players = defaultdict(lambda: {
-                "melee_kills": 0, "kills": 0, "deaths": 0, "shots_fired": 0, "shots_hit": 0,
-                "games_played": 0, "Clan": "Unknown Clan", "discord_id": None, "discord_server_id": None
+                "melee_kills": 0, "kills": 0, "deaths": 0,
+                "shots_fired": 0, "shots_hit": 0,
+                "stims_used": 0, "samples_extracted": 0, "stratagems_used": 0,
+                "games_played": 0, "Clan": "Unknown Clan",
+                "discord_id": None, "discord_server_id": None
             })
-            
+
             all_stats = await stats_collection.find(query).to_list(None)
-            
+
             for doc in all_stats:
                 name = doc.get('player_name')
                 if not name:
                     continue
-                try:
-                    melee = int(doc.get('Melee Kills', 0) or 0)
-                    kills = int(doc.get('Kills', 0) or 0)
-                    deaths = int(doc.get('Deaths', 0) or 0)
-                    shots_fired = int(doc.get('Shots Fired', 0) or 0)
-                    shots_hit = int(doc.get('Shots Hit', 0) or 0)
-                except Exception:
-                    melee = kills = deaths = shots_fired = shots_hit = 0
-                
-                players[name]["melee_kills"] += melee
-                players[name]["kills"] += kills
-                players[name]["deaths"] += deaths
-                players[name]["shots_fired"] += shots_fired
-                players[name]["shots_hit"] += shots_hit
-                players[name]["games_played"] += 1
-                
+
+                players[name]["melee_kills"]       += to_int(doc.get('Melee Kills'))
+                players[name]["kills"]             += to_int(doc.get('Kills'))
+                players[name]["deaths"]            += to_int(doc.get('Deaths'))
+                players[name]["shots_fired"]       += to_int(doc.get('Shots Fired'))
+                players[name]["shots_hit"]         += to_int(doc.get('Shots Hit'))
+                players[name]["stims_used"]        += to_int(doc.get('Stims Used'))
+                players[name]["samples_extracted"] += to_int(doc.get('Samples Extracted'))
+                players[name]["stratagems_used"]   += to_int(doc.get('Stratagems Used'))
+                players[name]["games_played"]      += 1
+
                 discord_id = doc.get('discord_id')
                 if discord_id and players[name].get("discord_id") is None:
                     players[name]["discord_id"] = str(discord_id)
-                
+
                 server_id = doc.get('discord_server_id')
                 if server_id is not None:
                     players[name]["discord_server_id"] = int(server_id)
@@ -237,11 +228,14 @@ class LeaderboardCog(commands.Cog):
                     "deaths": d["deaths"],
                     "shots_fired": d["shots_fired"],
                     "shots_hit": d["shots_hit"],
+                    "stims_used": d["stims_used"],
+                    "samples_extracted": d["samples_extracted"],
+                    "stratagems_used": d["stratagems_used"],
                     "games_played": d["games_played"],
                     "Clan": d["Clan"],
                     "average_kills": average_kills,
                     "average_accuracy": average_accuracy,
-                    "least_deaths": -d["deaths"],  # Negative for sorting (least at top)
+                    "least_deaths": -d["deaths"],  # negative for sorting
                     "discord_id": d.get("discord_id"),
                     "discord_server_id": d.get("discord_server_id"),
                 })
@@ -250,7 +244,7 @@ class LeaderboardCog(commands.Cog):
                 leaderboard.sort(key=lambda x: (x[stat_key], -x["games_played"]))  # fewest deaths, most games
             else:
                 leaderboard.sort(key=lambda x: (-x[stat_key], -x["games_played"]))
-            
+
             return leaderboard
         except Exception as e:
             logger.error(f"Error fetching leaderboard: {e}")
@@ -259,49 +253,54 @@ class LeaderboardCog(commands.Cog):
     async def build_leaderboard_embeds(self, leaderboard_data, title, stat_key):
         embeds = []
         batch_size = 10
-        image_path = LEADERBOARD_IMAGE_PATH if os.path.exists(LEADERBOARD_IMAGE_PATH) else None
 
         if not leaderboard_data:
-            return [], image_path
+            return []
 
         num_pages = (len(leaderboard_data) + batch_size - 1) // batch_size
         for i in range(num_pages):
             batch = leaderboard_data[i*batch_size:(i+1)*batch_size]
-            embed = discord.Embed(
-                title=title,
-                color=discord.Color.blurple()
-            )
+            embed = discord.Embed(title=title, color=discord.Color.blurple())
             if num_pages > 1:
                 embed.title += f" (Page {i+1}/{num_pages})"
-            embed.set_footer(text=f"Coming soon: Yearly, Monthly, Weekly, Daily, and Solo Leadboards via website!")
+            embed.set_footer(text="Check out https://gptfleet.com for more detailed information!")
 
-            if image_path and i == 0:
-                embed.set_image(url=f"attachment://{os.path.basename(image_path)}")
+            for idx, p in enumerate(batch, start=i*batch_size + 1):
+                name = (p['player_name'][:42] + "…") if len(p['player_name']) > 43 else p['player_name']
 
-            for idx, player in enumerate(batch, start=i*batch_size + 1):
-                name = (player['player_name'][:22] + "...") if len(player['player_name']) > 25 else player['player_name']
-                stat_val = player[stat_key]
+                focus_val = p[stat_key]
                 if stat_key == "average_accuracy":
-                    stat_val_str = f"{stat_val:.1f}%"
+                    focus_str = f"{focus_val:.1f}%"
                 elif stat_key == "average_kills":
-                    stat_val_str = f"{stat_val:.2f}"
+                    focus_str = f"{focus_val:.2f}"
                 elif stat_key == "least_deaths":
-                    stat_val_str = f"{-stat_val}"  # Show as positive number
+                    focus_str = f"{-focus_val}"
                 else:
-                    stat_val_str = f"{stat_val}"
+                    focus_str = f"{focus_val}"
+
+                value_lines = [
+                    f"**Name:** {name}",
+                    f"**Kills:** {p['kills']}",
+                    f"**Accuracy:** {(p['shots_hit'] / p['shots_fired'] * 100 if p['shots_fired'] else 0.0):.1f}%",
+                    f"**Shots Fired:** {p['shots_fired']}",
+                    f"**Shots Hit:** {p['shots_hit']}",
+                    f"**Deaths:** {p['deaths']}",
+                    f"**Melee Kills:** {p['melee_kills']}",
+                    f"**Stims Used:** {p['stims_used']}",
+                    f"**Samples Extracted:** {p['samples_extracted']}",
+                    f"**Stratagems Used:** {p['stratagems_used']}",
+                    f"**Focus Stat ({stat_key.replace('_',' ').title()}):** {focus_str}",
+                ]
+
                 embed.add_field(
                     name=f"#{idx}. {name}",
-                    value=(
-                        f"**Kills:** {player['kills']}\n"
-                        f"**Deaths:** {player['deaths']}\n"
-                        f"**Accuracy:** {(player['shots_hit'] / player['shots_fired'] * 100 if player['shots_fired'] else 0.0):.1f}%\n"
-                        f"**Shots Hit:** {player['shots_hit']}\n"
-                        f"**Shots Fired:** {player['shots_fired']}\n"
-                    ),
+                    value="\n".join(value_lines),
                     inline=True
                 )
+
             embeds.append(embed)
-        return embeds, image_path
+
+        return embeds
 
 async def setup(bot):
     if not hasattr(bot, 'mongo_db'):

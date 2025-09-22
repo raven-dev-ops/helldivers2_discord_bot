@@ -7,24 +7,31 @@ def prevent_discord_formatting(name: str) -> str:
     return name.replace('<#', '<\u200B#').replace('<@&', '<\u200B@&')
 
 def highlight_zero_values(player: dict) -> list:
-    fields = ["Kills", "Accuracy", "Shots Fired", "Shots Hit"]
+    # Add your new numeric fields here so they can be flagged when zero/empty
+    fields = ["Kills", "Accuracy", "Shots Fired", "Shots Hit",
+              "Deaths", "Melee Kills", "Stims Used", "Samples Extracted", "Stratagems Used"]
     zero_fields = []
     for field in fields:
         val = str(player.get(field, 'N/A'))
-        if val in ['0', '0.0', 'None', 'N/A']:
+        if val in ['0', '0.0', '0.00', 'None', 'N/A', '0%']:
             zero_fields.append(field)
     return zero_fields
 
 def validate_stat(field_name: str, raw_value: str):
-    raw_value = raw_value.strip()
-    if raw_value.upper() == 'N/A':
+    # Normalize and validate each field type
+    raw_value = (raw_value or '').strip()
+    if raw_value.upper() == 'N/A' or raw_value == '':
         return 'N/A'
-    if field_name in ['Kills', 'Shots Fired', 'Shots Hit', 'Deaths']:
-        return int(raw_value)
+    # Integers
+    if field_name in ['Kills', 'Shots Fired', 'Shots Hit', 'Deaths',
+                      'Melee Kills', 'Stims Used', 'Samples Extracted', 'Stratagems Used']:
+        return int(float(raw_value))  # tolerate "12.0" strings
+    # Percentage
     elif field_name == 'Accuracy':
         numeric_part = raw_value.replace('%', '')
         parsed = float(numeric_part)
         return f"{parsed:.1f}%"
+    # Fallback
     else:
         return raw_value
 
@@ -51,17 +58,28 @@ def build_single_embed(players_data: list, submitter_player_name: str) -> discor
         shots_hit = str(player.get('Shots Hit', 'N/A'))
         accuracy = str(player.get('Accuracy', 'N/A'))
         melee_kills = str(player.get('Melee Kills', 'N/A'))
+        stims_used = str(player.get('Stims Used', 'N/A'))
+        samples_extracted = str(player.get('Samples Extracted', 'N/A'))
+        stratagems_used = str(player.get('Stratagems Used', 'N/A'))
+
         player_info = (
             f"**Name**: {player_name}\n"
+            f"**Clan**: {clan_name}\n"
             f"**Kills**: {kills}\n"
             f"**Deaths**: {deaths}\n"
             f"**Shots Fired**: {shots_fired}\n"
             f"**Shots Hit**: {shots_hit}\n"
             f"**Accuracy**: {accuracy}\n"
-            f"**Melee Kills**: {melee_kills}\n")
+            f"**Melee Kills**: {melee_kills}\n"
+            f"**Stims Used**: {stims_used}\n"
+            f"**Samples Extracted**: {samples_extracted}\n"
+            f"**Stratagems Used**: {stratagems_used}\n"
+        )
+
         zero_vals = highlight_zero_values(player)
         if zero_vals:
             player_info += f"\n**Needs Confirmation**: {', '.join(zero_vals)}"
+
         embed.add_field(name=f"Player {index}", value=player_info, inline=False)
     return embed
 
@@ -80,6 +98,10 @@ def build_monitor_embed(players_data: list, submitter_name: str) -> discord.Embe
         shots_hit = str(player.get('Shots Hit', 'N/A'))
         accuracy = str(player.get('Accuracy', 'N/A'))
         melee_kills = str(player.get('Melee Kills', 'N/A'))
+        stims_used = str(player.get('Stims Used', 'N/A'))
+        samples_extracted = str(player.get('Samples Extracted', 'N/A'))
+        stratagems_used = str(player.get('Stratagems Used', 'N/A'))
+
         final_info = (
             f"**Name**: {player_name}\n"
             f"**Clan**: {clan_name}\n"
@@ -88,6 +110,10 @@ def build_monitor_embed(players_data: list, submitter_name: str) -> discord.Embe
             f"**Shots Fired**: {shots_fired}\n"
             f"**Shots Hit**: {shots_hit}\n"
             f"**Deaths**: {deaths}\n"
-            f"**Melee Kills**: {melee_kills}\n")
+            f"**Melee Kills**: {melee_kills}\n"
+            f"**Stims Used**: {stims_used}\n"
+            f"**Samples Extracted**: {samples_extracted}\n"
+            f"**Stratagems Used**: {stratagems_used}\n"
+        )
         embed.add_field(name=f"Player {index}", value=final_info, inline=False)
     return embed

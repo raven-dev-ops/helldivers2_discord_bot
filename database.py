@@ -61,14 +61,22 @@ async def create_indexes():
     """
     try:
         await get_mongo_client()
-        await _db[STATS_COLLECTION].create_index("server_nickname")
+        # Stats collection: index useful fields we actually query/sort on
+        await _db[STATS_COLLECTION].create_index("player_name")
+        await _db[STATS_COLLECTION].create_index("submitted_at")
+        await _db[STATS_COLLECTION].create_index("discord_id")
+        await _db[STATS_COLLECTION].create_index("discord_server_id")
+
+        # Registration & server listing
         await _db[REGISTRATION_COLLECTION].create_index("player_name")
         await _db[REGISTRATION_COLLECTION].create_index("discord_id")
         await _db[REGISTRATION_COLLECTION].create_index("discord_server_id")
         await _db[SERVER_LISTING_COLLECTION].create_index("discord_server_id")
+
         logger.info("MongoDB indexes created/ensured.")
     except Exception as e:
         logger.error(f"Error creating MongoDB indexes: {e}")
+
 ################################################
 # SERVER LISTING LOOKUPS
 ################################################
@@ -202,6 +210,11 @@ async def insert_player_data(players_data: List[Dict[str, Any]], submitted_by: s
             "Shots Hit": player.get("Shots Hit", "N/A"),
             "Deaths": player.get("Deaths", "N/A"),
             "Melee Kills": player.get("Melee Kills", "N/A"),
+            # NEW FIELDS
+            "Stims Used": player.get("Stims Used", "N/A"),
+            "Samples Extracted": player.get("Samples Extracted", "N/A"),
+            "Stratagems Used": player.get("Stratagems Used", "N/A"),
+
             "discord_id": str(player.get("discord_id")) if player.get("discord_id") is not None else None,
             "discord_server_id": player.get("discord_server_id", None),
             "clan_name": player.get("clan_name", "N/A"),
@@ -212,7 +225,7 @@ async def insert_player_data(players_data: List[Dict[str, Any]], submitted_by: s
             await stats_collection.insert_one(doc)
             logger.info(f"Inserted player data for {doc['player_name']}, submitted by {submitted_by}.")
         except Exception as e:
-            logger.error(f"Failed to insert player data for {doc['player_name']}: {e}")
+            logger.error(f"Failed to insert player data for {doc.get('player_name','Unknown')}: {e}")
 
 async def count_user_missions(discord_id: int) -> int:
     """Count missions completed by a specific Discord user."""
