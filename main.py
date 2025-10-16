@@ -56,8 +56,8 @@ async def load_cogs():
         'cogs.cleanup_cog',
         'cogs.dm_response',
         'cogs.register_modal',
-        'cogs.menu_view',
         'cogs.extract_cog',
+        'cogs.menu_view',
     ]
     for cog in cogs:
         try:

@@ -117,9 +117,9 @@ class SOSMenuView(discord.ui.View):
         if extract_cog:
             await extract_cog.submit_stats_button_flow(interaction)
         else:
-            logging.error("ExtractCog not found when pressing SUBMIT STATS. Ensure 'cogs.extract_cog' loaded correctly.")
+            logging.error("ExtractCog not found when pressing UPLOAD MISSION. Ensure 'cogs.extract_cog' loaded correctly.")
             await interaction.response.send_message(
-                "The stats submission system is not available at the moment. Please try again later.",
+                "Upload is not available at the moment. Please try again later.",
                 ephemeral=True
             )
 
@@ -370,5 +370,4 @@ class MenuViewCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(MenuViewCog(bot))
-
 
