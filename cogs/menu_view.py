@@ -22,12 +22,30 @@ class SOSMenuView(discord.ui.View):
     def __init__(self, bot: commands.Bot):
         super().__init__(timeout=None)
         self.bot = bot
-        # Add external link buttons
+
+    @discord.ui.button(label="WEBSITE", style=discord.ButtonStyle.secondary, custom_id="website_button")
+    async def website_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
-            self.add_item(discord.ui.Button(label="website", style=discord.ButtonStyle.link, url="https://gptfleet.com"))
-            self.add_item(discord.ui.Button(label="store", style=discord.ButtonStyle.link, url="https://gptfleet-shop.fourthwall.com/"))
-        except Exception:
-            pass
+            if not interaction.response.is_done():
+                await interaction.response.defer(ephemeral=True)
+            view = discord.ui.View()
+            view.add_item(discord.ui.Button(label="Open Website", style=discord.ButtonStyle.link, url="https://gptfleet.com"))
+            await interaction.followup.send("Open the website:", view=view, ephemeral=True)
+        except Exception as e:
+            await interaction.followup.send("Unable to open website right now.", ephemeral=True)
+            logging.error(f"Error in website_button: {e}")
+
+    @discord.ui.button(label="STORE", style=discord.ButtonStyle.secondary, custom_id="store_button")
+    async def store_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            if not interaction.response.is_done():
+                await interaction.response.defer(ephemeral=True)
+            view = discord.ui.View()
+            view.add_item(discord.ui.Button(label="Open Store", style=discord.ButtonStyle.link, url="https://gptfleet-shop.fourthwall.com/"))
+            await interaction.followup.send("Open the store:", view=view, ephemeral=True)
+        except Exception as e:
+            await interaction.followup.send("Unable to open store right now.", ephemeral=True)
+            logging.error(f"Error in store_button: {e}")
 
     #@discord.ui.button(label="CALL SOS", style=discord.ButtonStyle.danger, custom_id="launch_sos_button", disabled=False)
     #async def launch_sos_button(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -97,7 +115,7 @@ class SOSMenuView(discord.ui.View):
 
     @discord.ui.button(
         label="UPLOAD MISSION STATS",
-        style=discord.ButtonStyle.primary,
+        style=discord.ButtonStyle.success,
         custom_id="submit_stats_button"
     )
     async def submit_stats_button(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -149,11 +167,10 @@ class MenuViewCog(commands.Cog):
                 return
 
             embed_description = (
-                #"- **CALL SOS**: Quickly send an SOS for any missions. (touchscreens)\n\n"
-                #"- **MAKE LFG**: Customize your SOS mission by selecting various options"
-                #"(Enemy Type, Difficulty, Play Style, Voice Comms, Details).\n\n"
                 "- **REGISTER**: Register your Helldivers 2 player name.\n\n"
                 "- **REPORT STATS**: Submit your screenshots for mission stats to the database.\n\n"
+                "- **WEBSITE**: Visit gptfleet.com for news, tools, and info.\n\n"
+                "- **STORE**: Support the fleet at gptfleet-shop.fourthwall.com.\n\n"
                 "\n"
                 "*Please select an option below:*"
             )
