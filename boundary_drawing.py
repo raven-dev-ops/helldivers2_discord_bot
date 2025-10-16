@@ -26,7 +26,8 @@ KNOWN_RESOLUTIONS = {
             "Shots Hit":   (229, 322, 293, 346),
             "Deaths":      (250, 352, 293, 376),
             "Melee Kills": (250, 400, 293, 424),
-            "Stims Used":  (250, 430, 293, 454),
+            # Adjust Stims Used proportionally to 1920x1080 fix (575 -> ~426 here)
+            "Stims Used":  (250, 426, 293, 450),
             "Samples Extracted":  (250, 460, 293, 484),
             "Stratagems Used": (250, 490, 293, 514),
         },
