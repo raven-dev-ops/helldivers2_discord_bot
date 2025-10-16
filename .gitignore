@@ -52,4 +52,4 @@ instance/
 media/
 
 #dotenv
-.env
+.env.venv312/
