@@ -5,6 +5,8 @@ from discord.ext import commands
 import logging
 import os
 import asyncio
+from PIL import Image
+from io import BytesIO
 from .extract_helpers import validate_stat
 from database import get_mission_docs, update_mission_player_fields
 
@@ -318,9 +320,16 @@ class MenuViewCog(commands.Cog):
             file = None
             try:
                 if os.path.exists(IMAGE_PATH):
-                    file = discord.File(IMAGE_PATH, filename="gpt_network.png")
-                    embed.set_image(url="attachment://gpt_network.png")
-                    logging.debug(f"Image '{IMAGE_PATH}' prepared for embed as image.")
+                    img = Image.open(IMAGE_PATH)
+                    scale = 1.3
+                    new_size = (int(img.width * scale), int(img.height * scale))
+                    img_resized = img.resize(new_size, Image.LANCZOS)
+                    buf = BytesIO()
+                    img_resized.save(buf, format="PNG")
+                    buf.seek(0)
+                    file = discord.File(buf, filename="gpt_network_scaled.png")
+                    embed.set_image(url="attachment://gpt_network_scaled.png")
+                    logging.debug(f"Image '{IMAGE_PATH}' resized to {new_size} and prepared for embed.")
                 else:
                     logging.warning(f"Image file not found at path: {IMAGE_PATH}. Cannot embed image.")
             except Exception as e:
