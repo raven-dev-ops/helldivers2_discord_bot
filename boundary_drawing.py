@@ -47,7 +47,42 @@ KNOWN_RESOLUTIONS = {
             "Stratagems Used": (375, 720, 450, 755),
         },
         'offset': PLAYER_OFFSET,  # from config
-    }
+    },
+
+    # Scaled layout for 1365x768 (0.7109x width, 0.7111x height vs 1920x1080)
+    (1365, 768): {
+        'regions': {
+            "Name":        (92, 142, 256, 164),
+            "Kills":       (242, 241, 320, 267),
+            "Accuracy":    (242, 275, 320, 299),
+            "Shots Fired": (242, 310, 320, 334),
+            "Shots Hit":   (242, 343, 319, 368),
+            "Deaths":      (266, 375, 320, 403),
+            "Melee Kills": (266, 548, 320, 572),
+            "Stims Used":  (266, 409, 320, 433),
+            "Samples Extracted":  (266, 476, 320, 501),
+            "Stratagems Used": (266, 512, 320, 537),
+        },
+        # Horizontal player column offset scaled from 460
+        'offset': 327,
+    },
+
+    # Scaled layout for 1835x768 (0.9557x width, 0.7111x height vs 1920x1080)
+    (1835, 768): {
+        'regions': {
+            "Name":        (124, 142, 343, 164),
+            "Kills":       (325, 241, 430, 267),
+            "Accuracy":    (325, 275, 430, 299),
+            "Shots Fired": (325, 310, 430, 334),
+            "Shots Hit":   (325, 343, 429, 368),
+            "Deaths":      (358, 375, 430, 403),
+            "Melee Kills": (358, 548, 430, 572),
+            "Stims Used":  (358, 409, 430, 433),
+            "Samples Extracted":  (358, 476, 430, 501),
+            "Stratagems Used": (358, 512, 430, 537),
+        },
+        'offset': 440,
+    },
 }
 
 def is_close_enough(w, h, target_w, target_h, tolerance=TOLERANCE):
