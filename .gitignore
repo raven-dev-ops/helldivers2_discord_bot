@@ -52,5 +52,5 @@ instance/
 media/
 
 #dotenv
-\.env`r`n.venv312/
-
+.env
+.venv312/
