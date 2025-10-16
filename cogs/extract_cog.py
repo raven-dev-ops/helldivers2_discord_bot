@@ -87,6 +87,23 @@ class ConfirmationView(discord.ui.View):
     async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
             await interaction.response.defer(ephemeral=True)
+            # Recalculate Accuracy from Shots before saving; allow zeros
+            for p in self.shared_data.players_data:
+                try:
+                    sf = int(float(p.get('Shots Fired', 0)) or 0)
+                except Exception:
+                    sf = 0
+                try:
+                    sh = int(float(p.get('Shots Hit', 0)) or 0)
+                except Exception:
+                    sh = 0
+                if sh > sf:
+                    sh = sf
+                acc = (sh / sf * 100) if sf > 0 else 0
+                p['Shots Fired'] = sf
+                p['Shots Hit'] = sh
+                p['Accuracy'] = f"{min(acc, 100.0):.1f}%"
+
             await insert_player_data(self.shared_data.players_data, self.shared_data.submitter_player_name)
             for player in self.shared_data.players_data:
                 await maybe_promote(self.bot, player)
@@ -158,7 +175,7 @@ class PlayerSelect(discord.ui.Select):
             # UPDATED: Include the new fields so users can edit them
             fields = [
                 'player_name',
-                'Kills', 'Accuracy', 'Shots Fired', 'Shots Hit', 'Deaths', 'Melee Kills',
+                'Kills', 'Shots Fired', 'Shots Hit', 'Deaths', 'Melee Kills',
                 'Stims Used', 'Samples Extracted', 'Stratagems Used'
             ]
 
