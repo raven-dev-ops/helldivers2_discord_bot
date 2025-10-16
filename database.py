@@ -245,13 +245,23 @@ async def insert_player_data(players_data: List[Dict[str, Any]], submitted_by: s
     # Get next mission id from a Counters collection
     counters = _db['Counters']
     try:
+        # Seed counter so the first assigned value is 7,100,719
         counter_doc = await counters.find_one_and_update(
             {"_id": "mission_id"},
-            {"$inc": {"seq": 1}},
+            {"$setOnInsert": {"seq": 7100718}, "$inc": {"seq": 1}},
             upsert=True,
             return_document=ReturnDocument.AFTER,
         )
-        mission_id = int(counter_doc.get("seq", 1))
+        mission_id = int(counter_doc.get("seq", 7100719))
+        # Enforce minimum starting value if an older counter exists
+        if mission_id < 7100719:
+            counter_doc = await counters.find_one_and_update(
+                {"_id": "mission_id"},
+                {"$set": {"seq": 7100719}},
+                upsert=True,
+                return_document=ReturnDocument.AFTER,
+            )
+            mission_id = int(counter_doc.get("seq", 7100719))
     except Exception as e:
         logger.error(f"Failed to increment mission counter: {e}")
         mission_id = int(datetime.utcnow().timestamp())  # fallback unique-ish id

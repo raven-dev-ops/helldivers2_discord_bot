@@ -87,7 +87,7 @@ def build_single_embed(players_data: list, submitter_player_name: str) -> discor
 def build_monitor_embed(players_data: list, submitter_name: str, mission_id: int | None = None) -> discord.Embed:
     subtitle = f"Submitted by: {submitter_name}"
     if mission_id is not None:
-        subtitle += f" \u2022 Mission #{mission_id}"
+        subtitle += f"\nMission #{int(mission_id):07d}"
     embed = discord.Embed(
         title="Saved Results",
         description=subtitle,

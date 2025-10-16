@@ -134,7 +134,7 @@ class ConfirmationView(discord.ui.View):
             else:
                 logger.error("Monitor channel not found or invalid ID in DB.")
             await self.shared_data.message.edit(
-                content=f"Data confirmed and saved successfully! Mission #{mission_id}.",
+                content=f"Data confirmed and saved successfully! Mission #{mission_id:07d}.",
                 embeds=[],
                 view=None
             )

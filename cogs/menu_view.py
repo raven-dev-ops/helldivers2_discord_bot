@@ -152,7 +152,7 @@ class SOSMenuView(discord.ui.View):
                 ephemeral=True
             )
 
-    @discord.ui.button(label="EDIT SUBMISSION", style=discord.ButtonStyle.primary, custom_id="edit_submission_button")
+    @discord.ui.button(label="EDIT MISSION", style=discord.ButtonStyle.primary, custom_id="edit_submission_button")
     async def edit_submission_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
             modal = EditSubmissionModal(self.bot)
@@ -185,7 +185,7 @@ class EditSubmissionModal(discord.ui.Modal, title="Edit Submission"):
 
             view = EditMissionView(self.bot, mission_id_val, docs)
             player_list = ", ".join([d.get("player_name", "Unknown") for d in docs])
-            embed = discord.Embed(title=f"Editing Mission #{mission_id_val}", description=f"Players: {player_list}", color=discord.Color.purple())
+            embed = discord.Embed(title="EDIT MISSION", description=f"Players: {player_list}\nMission #{mission_id_val:07d}", color=discord.Color.purple())
             await interaction.response.send_message(content="Select a player and field to edit:", embed=embed, view=view, ephemeral=True)
         except Exception as e:
             logging.error(f"Error starting edit mission flow: {e}")
@@ -256,7 +256,7 @@ class FieldSelect(discord.ui.Select):
             updates = {field: new_value}
             ok = await update_mission_player_fields(self.parent.mission_id, self.parent.selected_player, updates)
             if ok:
-                await interaction.followup.send(f"Updated Mission #{self.parent.mission_id} • {self.parent.selected_player} • {field} = {new_value}", ephemeral=True)
+                await interaction.followup.send(f"Updated Mission #{self.parent.mission_id:07d} • {self.parent.selected_player} • {field} = {new_value}", ephemeral=True)
             else:
                 await interaction.followup.send("Update failed; mission/player not found.", ephemeral=True)
         except asyncio.TimeoutError:
@@ -300,11 +300,11 @@ class MenuViewCog(commands.Cog):
                 return
 
             embed_description = (
-                "- **REGISTER HELLDIVER**: Register your Helldivers 2 player name.\\n\\n- **REGISTER SHIP**: Register your ship name.\\n\\n"
-                "- **REPORT STATS**: Submit your screenshots for mission stats to the database.\n\n"
-                "- **WEBSITE**: Visit gptfleet.com for news, tools, and info.\n\n"
-                "- **STORE**: Support the fleet at gptfleet-shop.fourthwall.com.\n\n"
-                "\n"
+                "REGISTER HELLDIVER: Register your Helldivers 2 player name.\n\n"
+                "- REGISTER SHIP: Register your ship name.\n\n"
+                "- REPORT STATS: Submit your screenshots for mission stats to the database.\n\n"
+                "- WEBSITE: Visit gptfleet.com for news, tools, and info.\n\n"
+                "- STORE: Support the fleet at gptfleet-shop.fourthwall.com.\n\n"
                 "*Please select an option below:*"
             )
 
@@ -391,6 +391,7 @@ class MenuViewCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(MenuViewCog(bot))
+
 
 
 
