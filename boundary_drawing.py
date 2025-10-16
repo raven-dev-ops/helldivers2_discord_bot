@@ -45,7 +45,8 @@ KNOWN_RESOLUTIONS = {
             "Melee Kills": (375, 770, 450, 805),
             # Move Stims Used up: from y=820 to y=575 (preserving height)
             "Stims Used":  (375, 575, 450, 610),
-            "Samples Extracted":  (375, 870, 450, 905),
+            # Move Samples Extracted up: from y=870 to y=670 (preserving height)
+            "Samples Extracted":  (375, 670, 450, 705),
             # Move Stratagems Used up: from y=920 to y=720 (preserving height)
             "Stratagems Used": (375, 720, 450, 755),
         },
