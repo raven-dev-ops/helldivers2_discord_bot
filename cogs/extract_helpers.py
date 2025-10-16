@@ -58,7 +58,6 @@ def build_single_embed(players_data: list, submitter_player_name: str) -> discor
     )
     for index, player in enumerate(players_data, start=1):
         player_name = prevent_discord_formatting(player.get('player_name', 'Unknown'))
-        clan_name = player.get('clan_name', 'N/A')
         kills = str(player.get('Kills', 'N/A'))
         deaths = str(player.get('Deaths', 'N/A'))
         shots_fired = str(player.get('Shots Fired', 'N/A'))
@@ -71,7 +70,6 @@ def build_single_embed(players_data: list, submitter_player_name: str) -> discor
 
         player_info = (
             f"**Name**: {player_name}\n"
-            f"**Clan**: {clan_name}\n"
             f"**Kills**: {kills}\n"
             f"**Deaths**: {deaths}\n"
             f"**Shots Fired**: {shots_fired}\n"
@@ -97,7 +95,6 @@ def build_monitor_embed(players_data: list, submitter_name: str, mission_id: int
     )
     for index, player in enumerate(players_data, start=1):
         player_name = prevent_discord_formatting(player.get('player_name', 'Unknown'))
-        clan_name = player.get('clan_name', 'N/A')
         kills = str(player.get('Kills', 'N/A'))
         deaths = str(player.get('Deaths', 'N/A'))
         shots_fired = str(player.get('Shots Fired', 'N/A'))
@@ -110,7 +107,6 @@ def build_monitor_embed(players_data: list, submitter_name: str, mission_id: int
 
         final_info = (
             f"**Name**: {player_name}\n"
-            f"**Clan**: {clan_name}\n"
             f"**Kills**: {kills}\n"
             f"**Accuracy**: {accuracy}\n"
             f"**Shots Fired**: {shots_fired}\n"
@@ -123,4 +119,3 @@ def build_monitor_embed(players_data: list, submitter_name: str, mission_id: int
         )
         embed.add_field(name=f"Player {index}", value=final_info, inline=False)
     return embed
-

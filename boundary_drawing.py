@@ -44,7 +44,8 @@ KNOWN_RESOLUTIONS = {
             "Melee Kills": (375, 770, 450, 805),
             "Stims Used":  (375, 820, 450, 855),
             "Samples Extracted":  (375, 870, 450, 905),
-            "Stratagems Used": (375, 920, 450, 955),
+            # Move Stratagems Used up: from y=920 to y=720 (preserving height)
+            "Stratagems Used": (375, 720, 450, 755),
         },
         'offset': PLAYER_OFFSET,  # from config
     }
