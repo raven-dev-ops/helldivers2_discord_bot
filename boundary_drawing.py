@@ -25,12 +25,7 @@ KNOWN_RESOLUTIONS = {
             "Shots Fired": (229, 291, 293, 311),
             "Shots Hit":   (229, 322, 293, 346),
             "Deaths":      (250, 352, 293, 376),
-            "Melee Kills": (250, 400, 293, 424),
-            # Adjust Stims Used proportionally to 1920x1080 fix (575 -> ~426 here)
-            "Stims Used":  (250, 426, 293, 450),
-            # Adjust Samples Extracted proportionally to 1920x1080 fix (~-148px on 800px height)
-            "Samples Extracted":  (250, 312, 293, 336),
-            "Stratagems Used": (250, 490, 293, 514),
+            "Stims Used":  (250, 426, 293, 452),`r`n            "Samples Extracted":  (250, 496, 293, 522),`r`n            "Stratagems Used": (250, 533, 293, 559),`r`n            "Melee Kills": (250, 570, 293, 596),
         },
         # For subsequent players, we shift horizontally by 305
         'offset': 305,
@@ -189,3 +184,4 @@ def draw_boundaries(image, regions):
         cv2.putText(image, label, (x1, y1 - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
     return image
+
