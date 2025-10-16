@@ -106,25 +106,6 @@ class SOSMenuView(discord.ui.View):
                 ephemeral=True
             )
 
-    @discord.ui.button(label="REGISTER SHIP", style=discord.ButtonStyle.primary, custom_id="register_ship_button")
-    async def register_ship_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        register_modal_cog = self.bot.get_cog("RegisterModalCog")
-        if register_modal_cog:
-            try:
-                modal = register_modal_cog.get_register_ship_modal(interaction)
-                await interaction.response.send_modal(modal)
-            except Exception as e:
-                await interaction.response.send_message(
-                    "An error occurred while opening the ship registration modal. Please try again later.",
-                    ephemeral=True
-                )
-                logging.error(f"Error in register_ship_button: {e}")
-        else:
-            logging.error("RegisterModalCog not found when pressing REGISTER SHIP. Ensure 'cogs.register_modal' loaded correctly.")
-            await interaction.response.send_message(
-                "The ship registration system is not available at the moment. Please try again later.",
-                ephemeral=True
-            )
 
     @discord.ui.button(
         label="UPLOAD MISSION STATS",
@@ -300,7 +281,7 @@ class MenuViewCog(commands.Cog):
             )
 
             embed = discord.Embed(
-                title="GPTFLEET HD2 CLAN MENU",
+                title="GPT CLAN MENU",
                 description=embed_description,
                 color=discord.Color.blue()
             )
@@ -389,7 +370,6 @@ class MenuViewCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(MenuViewCog(bot))
-
 
 
 
