@@ -86,7 +86,7 @@ class SOSMenuView(discord.ui.View):
     #            ephemeral=True
     #        )
 
-    @discord.ui.button(label="REGISTER HELLDIVER", style=discord.ButtonStyle.primary, custom_id="register_button")
+    @discord.ui.button(label="REGISTER", style=discord.ButtonStyle.primary, custom_id="register_button")
     async def register_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         register_modal_cog = self.bot.get_cog("RegisterModalCog")
         if register_modal_cog:
@@ -100,7 +100,7 @@ class SOSMenuView(discord.ui.View):
                 )
                 logging.error(f"Error in register_button: {e}")
         else:
-            logging.error("RegisterModalCog not found when pressing REGISTER HELLDIVER. Ensure 'cogs.register_modal' loaded correctly.")
+            logging.error("RegisterModalCog not found when pressing REGISTER. Ensure 'cogs.register_modal' loaded correctly.")
             await interaction.response.send_message(
                 "The registration system is not available at the moment. Please try again later.",
                 ephemeral=True
@@ -271,11 +271,9 @@ class MenuViewCog(commands.Cog):
                 return
 
             embed_description = (
-                "- REGISTER HELLDIVER: Register your Helldivers 2 player name.\n\n"
-                "- REGISTER SHIP: Register your ship name.\n\n"
-                "- UPLOAD MISSION STATS: Submit your screenshots for mission stats to the database.\n\n"
+                "- REGISTER: Register your Helldivers 2 player and Super Earth ship name.\n\n"
+                "- UPLOAD MISSION: Submit your screenshots for mission stats to the database.\n\n"
                 "- EDIT MISSION: Edit a previous mission by ID.\n\n"
-                "- WEBSITE: Visit gptfleet.com for news, tools, and info.\n\n"
                 "- STORE: Support the fleet at gptfleet-shop.fourthwall.com.\n\n"
                 "*Please select an option below:*"
             )

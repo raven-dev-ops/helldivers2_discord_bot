@@ -111,7 +111,16 @@ class ConfirmationView(discord.ui.View):
             leaderboard_cog = self.bot.get_cog("LeaderboardCog")
             if leaderboard_cog:
                 asyncio.create_task(leaderboard_cog._run_leaderboard_update(force=True))
-            monitor_embed = build_monitor_embed(                self.shared_data.players_data, self.shared_data.submitter_player_name, mission_id=mission_id            )
+
+            # Include submitter's ship on the monitor embed
+            submitter_user = await get_registered_user_by_discord_id(interaction.user.id)
+            submitter_ship = submitter_user.get('ship_name') if submitter_user else None
+            monitor_embed = build_monitor_embed(
+                self.shared_data.players_data,
+                self.shared_data.submitter_player_name,
+                mission_id=mission_id,
+                submitter_ship=submitter_ship
+            )
             annotated_file = None
             if self.shared_data.screenshot_bytes and self.shared_data.screenshot_filename:
                 try:
@@ -487,4 +496,5 @@ class ExtractCog(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(ExtractCog(bot))
+
 

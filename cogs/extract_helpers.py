@@ -84,8 +84,10 @@ def build_single_embed(players_data: list, submitter_player_name: str) -> discor
     return embed
 
 
-def build_monitor_embed(players_data: list, submitter_name: str, mission_id: int | None = None) -> discord.Embed:
+def build_monitor_embed(players_data: list, submitter_name: str, mission_id: int | None = None, submitter_ship: str | None = None) -> discord.Embed:
     subtitle = f"Submitted by: {submitter_name}"
+    if submitter_ship:
+        subtitle += f"\nSuper Earth Ship: {submitter_ship}"
     if mission_id is not None:
         subtitle += f"\nMission #{int(mission_id):07d}"
     embed = discord.Embed(

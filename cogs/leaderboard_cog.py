@@ -90,41 +90,68 @@ class LeaderboardCog(commands.Cog):
                 if not channel:
                     continue
                 # Clean up old leaderboard messages (ensure deletion before posting new)
-                if channel.permissions_for(guild.me).manage_messages:
-                    try:
-                        total_deleted = 0
-                        while True:
-                            found = False
-                            async for msg in channel.history(limit=200):
-                                if msg.author != self.bot.user or not msg.embeds:
-                                    continue
-                                old_title = (msg.embeds[0].title or "").upper()
-                                if "LEADERBOARD" in old_title:
+                try:
+                    def _is_old_lb(m: discord.Message) -> bool:
+                        if m.author != self.bot.user or not m.embeds:
+                            return False
+                        t = (m.embeds[0].title or "").upper()
+                        return ("LEADERBOARD" in t or "MOST SHOTS FIRED" in t or "MONTHLY" in t)
+
+                    total_deleted = 0
+                    perms = channel.permissions_for(guild.me)
+                    if perms.manage_messages:
+                        try:
+                            deleted = await channel.purge(limit=1000, check=_is_old_lb, bulk=True)
+                            total_deleted += len(deleted)
+                        except Exception:
+                            async for msg in channel.history(limit=500):
+                                if _is_old_lb(msg):
                                     try:
                                         await msg.delete()
                                         total_deleted += 1
-                                        found = True
-                                        await asyncio.sleep(0.4)
+                                        await asyncio.sleep(0.2)
                                     except Exception:
                                         pass
-                            if not found:
-                                break
-                        if total_deleted:
-                            logger.info(f"Deleted {total_deleted} old leaderboard messages in {guild.name} before posting new.")
-                    except Exception as e:
-                        logger.warning(f"Failed to purge old leaderboard messages in {guild.name}: {e}")
+                    else:
+                        async for msg in channel.history(limit=200):
+                            if _is_old_lb(msg):
+                                try:
+                                    await msg.delete()
+                                    total_deleted += 1
+                                    await asyncio.sleep(0.2)
+                                except Exception:
+                                    pass
+                    if total_deleted:
+                        logger.info(f"Deleted {total_deleted} old leaderboard messages in {guild.name} before posting new.")
+                except Exception as e:
+                    logger.warning(f"Failed to purge old leaderboard messages in {guild.name}: {e}")
                 # Post leaderboard
+                new_ids = []
                 if not embeds:
                     embed = discord.Embed(
                         title=title,
                         description="No leaderboard data available.",
                         color=discord.Color.blue()
                     )
-                    await channel.send(embed=embed)
+                    msg = await channel.send(embed=embed)
+                    new_ids.append(int(msg.id))
                 else:
                     for embed in embeds:
-                        await channel.send(embed=embed)
+                        msg = await channel.send(embed=embed)
+                        new_ids.append(int(msg.id))
                         await asyncio.sleep(1.1)
+
+                # Persist the new message IDs for precise deletion next update
+                try:
+                    if hasattr(self.bot, 'mongo_db'):
+                        server_listing = self.bot.mongo_db['Server_Listing']
+                        await server_listing.update_one(
+                            {"discord_server_id": guild.id},
+                            {"": {"leaderboard_message_ids": new_ids}},
+                            upsert=True,
+                        )
+                except Exception as e:
+                    logger.warning(f"Failed to store leaderboard_message_ids for {guild.name}: {e}")
 
     async def promote_class_a_citizens(self, leaderboard_data):
         """Assign Class A Citizen role to players with >=3 games."""
@@ -337,6 +364,8 @@ async def setup(bot):
     if not hasattr(bot, 'mongo_db'):
         raise RuntimeError("LeaderboardCog requires bot.mongo_db to be initialized.")
     await bot.add_cog(LeaderboardCog(bot))
+
+
 
 
 

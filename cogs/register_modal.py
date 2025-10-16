@@ -4,7 +4,7 @@ from datetime import datetime
 import logging
 import asyncio
 
-class RegisterModal(discord.ui.Modal, title="Register as a Helldiver"):
+class RegisterModal(discord.ui.Modal, title="Register"):
     """
     A modal for user registration.
     """
@@ -12,6 +12,12 @@ class RegisterModal(discord.ui.Modal, title="Register as a Helldiver"):
         label="Helldiver Name",
         placeholder="Enter your Helldiver Name...",
         required=True,
+        max_length=100
+    )
+    ship_name = discord.ui.TextInput(
+        label="Super Earth Ship Name (optional)",
+        placeholder="Enter your Super Earth Ship Name...",
+        required=False,
         max_length=100
     )
 
@@ -36,6 +42,7 @@ class RegisterModal(discord.ui.Modal, title="Register as a Helldiver"):
             server_name = interaction.guild.name.strip()
             server_nickname = interaction.user.display_name.strip()
             player_name = self.helldiver_name.value.strip()
+            ship_name = (self.ship_name.value or "").strip()
             logging.info(f"Registering user '{player_name}' (Discord ID: {discord_id}) in guild '{server_name}' ({discord_server_id}).")
 
             # Insert into the Alliance collection
@@ -44,12 +51,16 @@ class RegisterModal(discord.ui.Modal, title="Register as a Helldiver"):
                 "discord_id": discord_id,
                 "discord_server_id": discord_server_id,
             }
+            set_fields = {
+                "player_name": player_name,
+                "server_name": server_name,
+                "server_nickname": server_nickname,
+            }
+            if ship_name:
+                set_fields["ship_name"] = ship_name
+
             update_doc = {
-                "$set": {
-                    "player_name": player_name,
-                    "server_name": server_name,
-                    "server_nickname": server_nickname,
-                },
+                "$set": set_fields,
                 "$setOnInsert": {"registered_at": datetime.utcnow()}
             }
 
@@ -59,10 +70,10 @@ class RegisterModal(discord.ui.Modal, title="Register as a Helldiver"):
             else:
                 logging.info(f"User '{player_name}' Alliance registration updated without creating a duplicate.")
 
-            await interaction.response.send_message(
-                f"Registration successful! Welcome, **{player_name}**!",
-                ephemeral=True
-            )  # Send this if no role was selected or role assignment failed
+            msg = f"Registration successful! Welcome, **{player_name}**!"
+            if ship_name:
+                msg += f" Ship: **{ship_name}**."
+            await interaction.response.send_message(msg, ephemeral=True)
             logging.info(f"User {player_name} ({discord_id}) registered successfully.")
 
         except Exception as e:  # Catch errors during the initial registration process
