@@ -38,6 +38,21 @@ class LeaderboardCog(commands.Cog):
         self.leaderboard_lock = asyncio.Lock()
         self.last_known_month = datetime.utcnow().month
         self.update_leaderboard_task.start()
+        # Run a one-shot initial refresh shortly after startup so the
+        # leaderboard updates immediately on deploy/restart, instead of
+        # waiting for the hourly task tick.
+        try:
+            asyncio.create_task(self._initial_refresh())
+        except Exception:
+            pass
+
+    async def _initial_refresh(self):
+        try:
+            await self.bot.wait_until_ready()
+            await asyncio.sleep(2)
+            await self._run_leaderboard_update(force=True)
+        except Exception as e:
+            logger.warning(f"Initial leaderboard refresh failed: {e}")
 
     def cog_unload(self):
         self.update_leaderboard_task.cancel()
