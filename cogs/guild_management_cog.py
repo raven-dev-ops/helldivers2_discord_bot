@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import logging
 import asyncio  # Import asyncio for sleep
+from config import class_b_role_id
 
 class GuildManagementCog(commands.Cog):
     """
@@ -99,19 +100,25 @@ class GuildManagementCog(commands.Cog):
 
         logging.info(f"Bot has sufficient permissions for setup in guild '{guild.name}'. Proceeding.")
 
-        # Resolve or create the Class B Citizens role
-        class_b = discord.utils.get(guild.roles, name="Class B Citizens")
+        # Resolve the Class B Citizens role by configured ID (do not create roles)
+        class_b = None
+        try:
+            if class_b_role_id is not None:
+                class_b = guild.get_role(int(class_b_role_id))
+        except Exception:
+            class_b = None
         if class_b is None:
-            try:
-                class_b = await guild.create_role(name="Class B Citizens", reason="Required for GPT Network access")
-                logging.info(f"Created role 'Class B Citizens' in guild '{guild.name}'.")
-            except Exception as e:
-                logging.error(f"Failed to ensure 'Class B Citizens' role in guild '{guild.name}': {e}")
+            # Fallback by name only (no creation)
+            class_b = discord.utils.get(guild.roles, name="Class B Citizens")
+            if class_b is None:
+                logging.warning(
+                    "Class B role not found by ID or name in guild '%s'. Category will be hidden to everyone except bot.",
+                    guild.name,
+                )
 
         # Lock category to Class B Citizens only
         category_overwrites = {
             guild.default_role: discord.PermissionOverwrite(view_channel=False),
-            class_b: discord.PermissionOverwrite(view_channel=True) if class_b else None,
             bot_member: discord.PermissionOverwrite(
                 view_channel=True,
                 send_messages=True,
@@ -120,6 +127,8 @@ class GuildManagementCog(commands.Cog):
                 manage_messages=True
             )
         }
+        if class_b is not None:
+            category_overwrites[class_b] = discord.PermissionOverwrite(view_channel=True)
         # Remove any None entries if class_b creation failed
         category_overwrites = {k: v for k, v in category_overwrites.items() if v is not None}
 

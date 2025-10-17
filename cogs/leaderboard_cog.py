@@ -7,6 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from collections import defaultdict
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+from config import class_b_role_id
 try:
     # Python <3.9 may not define this; catch broadly
     from zoneinfo import ZoneInfoNotFoundError  # type: ignore
@@ -223,7 +224,15 @@ class LeaderboardCog(commands.Cog):
         channel = None
         server_listing = None
         category = None
-        class_b = discord.utils.get(guild.roles, name="Class B Citizens")
+        # Prefer configured Class B role ID; fallback to name (no creation)
+        class_b = None
+        try:
+            if class_b_role_id is not None:
+                class_b = guild.get_role(int(class_b_role_id))
+        except Exception:
+            class_b = None
+        if class_b is None:
+            class_b = discord.utils.get(guild.roles, name="Class B Citizens")
         try:
             if hasattr(self.bot, 'mongo_db'):
                 server_listing = self.bot.mongo_db['Server_Listing']
