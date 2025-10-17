@@ -693,16 +693,16 @@ class ExtractCog(commands.Cog):
             logger.info(f"After matching against DB, {len(players_data)} registered players remain.")
             # Relaxed rule: accept as long as at least one registered player is present
             if len(players_data) < 1:
-                # Provide a debug overlay with OCR regions to help adjust
+                # Generate debug overlay (to be attached to the same message as the registration view)
+                annotated_file = None
                 try:
                     img_bgr = cv2.cvtColor(img_cv, cv2.COLOR_RGB2BGR)
                     annotated = draw_boundaries(img_bgr.copy(), regions)
                     ok, buf = cv2.imencode('.png', annotated)
                     if ok:
-                        await interaction.followup.send(
-                            content="No registered players were detected. Showing OCR regions overlay for debugging.",
-                            file=discord.File(BytesIO(bytearray(buf)), filename=f"ocr_regions_{image.filename.rsplit('.',1)[0]}.png"),
-                            ephemeral=True
+                        annotated_file = discord.File(
+                            BytesIO(bytearray(buf)),
+                            filename=f"ocr_regions_{image.filename.rsplit('.',1)[0]}.png"
                         )
                 except Exception as e:
                     logger.warning(f"Failed to annotate OCR regions for debug (registration stage): {e}")
@@ -736,12 +736,21 @@ class ExtractCog(commands.Cog):
                     color=discord.Color.orange()
                 )
                 embed.set_footer(text="Use REGISTER MISSING to add players, then press YES to save.")
-                message = await interaction.followup.send(
-                    content="No registered players were detected. You can register the missing players below.",
-                    embed=embed,
-                    view=view,
-                    ephemeral=True
-                )
+                if annotated_file:
+                    message = await interaction.followup.send(
+                        content="No registered players were detected. You can register the missing players below.",
+                        embed=embed,
+                        view=view,
+                        file=annotated_file,
+                        ephemeral=True
+                    )
+                else:
+                    message = await interaction.followup.send(
+                        content="No registered players were detected. You can register the missing players below.",
+                        embed=embed,
+                        view=view,
+                        ephemeral=True
+                    )
                 shared_data.message = message
                 return
 
