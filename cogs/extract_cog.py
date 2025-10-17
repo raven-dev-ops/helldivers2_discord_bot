@@ -155,6 +155,39 @@ class ConfirmationView(discord.ui.View):
     async def edit(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.edit_player_selection(interaction)
 
+    @discord.ui.button(label="SHOW REGIONS", style=discord.ButtonStyle.secondary)
+    async def show_regions(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            if not interaction.response.is_done():
+                await interaction.response.defer(ephemeral=True)
+            if not (self.shared_data.screenshot_bytes and self.shared_data.screenshot_filename):
+                await interaction.followup.send("No screenshot available for annotation.", ephemeral=True)
+                return
+            try:
+                pil = Image.open(BytesIO(self.shared_data.screenshot_bytes)).convert('RGB')
+                img_cv = np.array(pil)
+                regions = define_regions(img_cv.shape)
+                img_bgr = cv2.cvtColor(img_cv, cv2.COLOR_RGB2BGR)
+                annotated = draw_boundaries(img_bgr.copy(), regions)
+                ok, buf = cv2.imencode('.png', annotated)
+                if ok:
+                    file = discord.File(
+                        BytesIO(bytearray(buf)),
+                        filename=f"ocr_regions_{self.shared_data.screenshot_filename.rsplit('.',1)[0]}.png"
+                    )
+                    await interaction.followup.send("OCR regions overlay:", file=file, ephemeral=True)
+                else:
+                    await interaction.followup.send("Failed to render annotated image.", ephemeral=True)
+            except Exception as e:
+                logger.warning(f"Failed to generate OCR regions overlay on request: {e}")
+                await interaction.followup.send("Unable to generate overlay.", ephemeral=True)
+        except Exception as e:
+            logger.error(f"Error in SHOW REGIONS button: {e}")
+            try:
+                await interaction.followup.send("Error showing regions.", ephemeral=True)
+            except Exception:
+                pass
+
     async def edit_player_selection(self, interaction: discord.Interaction):
         try:
             options = []
