@@ -90,6 +90,13 @@ class ConfirmationView(discord.ui.View):
     async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
             await interaction.response.defer(ephemeral=True)
+            # Prevent saving an empty mission; require at least one registered player
+            if not self.shared_data.players_data:
+                await interaction.followup.send(
+                    "Please register at least one player before saving.",
+                    ephemeral=True
+                )
+                return
             # Recalculate Accuracy from Shots before saving; allow zeros
             for p in self.shared_data.players_data:
                 try:
@@ -699,10 +706,43 @@ class ExtractCog(commands.Cog):
                         )
                 except Exception as e:
                     logger.warning(f"Failed to annotate OCR regions for debug (registration stage): {e}")
-                await interaction.followup.send(
-                    "No registered players were detected in the image. Please ensure at least one player is registered.",
+
+                # Show a view that lets the user register missing players immediately
+                try:
+                    submitter_user = await get_registered_user_by_discord_id(interaction.user.id)
+                    submitter_player_name = submitter_user.get('player_name', 'Unknown') if submitter_user else 'Unknown'
+                except Exception:
+                    submitter_player_name = 'Unknown'
+
+                shared_data = SharedData(
+                    players_data,
+                    submitter_player_name,
+                    registered_users,
+                    monitor_channel_id,
+                    screenshot_bytes=img_bytes,
+                    screenshot_filename=image.filename,
+                    missing_players=missing_players
+                )
+                view = ConfirmationView(shared_data, self.bot)
+                shared_data.view = view
+                # Build a simple embed listing missing players
+                desc_lines = []
+                for idx, mp in enumerate(missing_players, start=1):
+                    nm = mp.get('unregistered_name', 'Unknown')
+                    desc_lines.append(f"{idx}. {nm}")
+                embed = discord.Embed(
+                    title="Unregistered Players Detected",
+                    description=("\n".join(desc_lines) or "No names found."),
+                    color=discord.Color.orange()
+                )
+                embed.set_footer(text="Use REGISTER MISSING to add players, then press YES to save.")
+                message = await interaction.followup.send(
+                    content="No registered players were detected. You can register the missing players below.",
+                    embed=embed,
+                    view=view,
                     ephemeral=True
                 )
+                shared_data.message = message
                 return
 
             submitter_user = await get_registered_user_by_discord_id(interaction.user.id)
