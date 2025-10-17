@@ -1,5 +1,8 @@
 build:
   docker:
     worker: Dockerfile
+
+# Explicitly define the process to run
 run:
   worker: python main.py
+
