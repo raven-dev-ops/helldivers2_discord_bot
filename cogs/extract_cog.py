@@ -412,8 +412,7 @@ class ExtractCog(commands.Cog):
                             ephemeral=True
                         )
                 except Exception as e:
-                    logger.warning(f"Failed to annotate OCR regions for debug (no-name stage): {e}
-")
+                    logger.warning(f"Failed to annotate OCR regions for debug (no-name stage): {e}")
                 await interaction.followup.send("No players with valid names were detected in the image.", ephemeral=True)
                 return
             registered_users = await get_registered_users()
