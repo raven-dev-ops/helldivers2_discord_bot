@@ -21,7 +21,8 @@ from database import (
     find_best_match,
     get_registered_user_by_discord_id,
     get_clan_name_by_discord_server_id,
-    get_server_listing_by_id
+    get_server_listing_by_id,
+    upsert_registered_user
 )
 from config import (
     ALLOWED_EXTENSIONS,
@@ -65,7 +66,7 @@ async def maybe_promote(bot: commands.Bot, player: dict):
 class SharedData:
     def __init__(
         self, players_data, submitter_player_name, registered_users, monitor_channel_id,
-        screenshot_bytes=None, screenshot_filename=None
+        screenshot_bytes=None, screenshot_filename=None, missing_players=None
     ):
         self.players_data = players_data
         self.submitter_player_name = submitter_player_name
@@ -77,6 +78,7 @@ class SharedData:
         self.view = None
         self.screenshot_bytes = screenshot_bytes
         self.screenshot_filename = screenshot_filename
+        self.missing_players = missing_players or []
 
 class ConfirmationView(discord.ui.View):
     def __init__(self, shared_data, bot):
@@ -185,6 +187,126 @@ class ConfirmationView(discord.ui.View):
             logger.error(f"Error in SHOW REGIONS button: {e}")
             try:
                 await interaction.followup.send("Error showing regions.", ephemeral=True)
+            except Exception:
+                pass
+
+    @discord.ui.button(label="REGISTER MISSING", style=discord.ButtonStyle.danger)
+    async def register_missing(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            missing = self.shared_data.missing_players or []
+            if not missing:
+                await interaction.response.send_message("No missing players to register.", ephemeral=True)
+                return
+            view = RegisterMissingView(self.shared_data, self.bot, interaction.guild_id)
+            await interaction.response.send_message("Select a missing player to register:", view=view, ephemeral=True)
+        except Exception as e:
+            logger.error(f"Error opening Register Missing flow: {e}")
+            if not interaction.response.is_done():
+                await interaction.response.send_message("Unable to open registration flow.", ephemeral=True)
+
+class RegisterMissingView(discord.ui.View):
+    def __init__(self, shared_data: SharedData, bot: commands.Bot, guild_id: int):
+        super().__init__(timeout=120)
+        self.shared_data = shared_data
+        self.bot = bot
+        self.guild_id = guild_id
+        options = []
+        for idx, p in enumerate(self.shared_data.missing_players):
+            label = p.get('unregistered_name', f"Missing {idx+1}") or f"Missing {idx+1}"
+            options.append(discord.SelectOption(label=label[:100], value=str(idx)))
+        self.add_item(RegisterMissingSelect(options, self))
+
+class RegisterMissingSelect(discord.ui.Select):
+    def __init__(self, options, parent: RegisterMissingView):
+        super().__init__(placeholder="Choose a player to register", options=options, min_values=1, max_values=1)
+        self.parent = parent
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            sel = int(self.values[0])
+            missing = self.parent.shared_data.missing_players
+            if sel < 0 or sel >= len(missing):
+                await interaction.response.send_message("Invalid selection.", ephemeral=True)
+                return
+            default_name = missing[sel].get('unregistered_name', '') or ''
+            modal = RegisterPlayerModal(self.parent.shared_data, self.parent.bot, self.parent.guild_id, sel, default_name)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            logger.error(f"Error in RegisterMissingSelect callback: {e}")
+            if not interaction.response.is_done():
+                await interaction.response.send_message("Failed to open registration modal.", ephemeral=True)
+
+class RegisterPlayerModal(discord.ui.Modal, title="Register Player"):
+    discord_id = discord.ui.TextInput(label="Discord ID (numbers)", placeholder="e.g. 123456789012345678", required=True, max_length=20)
+    player_name = discord.ui.TextInput(label="Helldiver Name", placeholder="Exact in-game name", required=True, max_length=50)
+
+    def __init__(self, shared_data: SharedData, bot: commands.Bot, guild_id: int, missing_index: int, default_name: str):
+        super().__init__()
+        self.shared_data = shared_data
+        self.bot = bot
+        self.guild_id = guild_id
+        self.missing_index = missing_index
+        try:
+            # Pre-fill name if available
+            self.player_name.default = default_name
+        except Exception:
+            pass
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            try:
+                did = int(str(self.discord_id.value).strip())
+            except Exception:
+                await interaction.response.send_message("Discord ID must be a number.", ephemeral=True)
+                return
+            name_val = str(self.player_name.value).strip()
+            if not name_val:
+                await interaction.response.send_message("Player name is required.", ephemeral=True)
+                return
+            ok = await upsert_registered_user(did, int(self.guild_id), name_val)
+            if not ok:
+                await interaction.response.send_message("Failed to register player in database.", ephemeral=True)
+                return
+            # Transform missing entry into a registered player row
+            try:
+                mp = self.shared_data.missing_players.pop(self.missing_index)
+            except Exception:
+                mp = {}
+            stats_row = {
+                'player_name': name_val,
+                'discord_id': did,
+                'discord_server_id': int(self.guild_id),
+                'Kills': mp.get('Kills', 'N/A'),
+                'Accuracy': mp.get('Accuracy', 'N/A'),
+                'Shots Fired': mp.get('Shots Fired', 'N/A'),
+                'Shots Hit': mp.get('Shots Hit', 'N/A'),
+                'Deaths': mp.get('Deaths', 'N/A'),
+                'Melee Kills': mp.get('Melee Kills', 'N/A'),
+                'Stims Used': mp.get('Stims Used', 'N/A'),
+                'Samples Extracted': mp.get('Samples Extracted', 'N/A'),
+                'Stratagems Used': mp.get('Stratagems Used', 'N/A'),
+                'clan_name': 'N/A',
+            }
+            try:
+                clan = await get_clan_name_by_discord_server_id(self.guild_id)
+                stats_row['clan_name'] = clan or 'N/A'
+            except Exception:
+                pass
+            # Ensure key presence
+            for k in ['Kills','Accuracy','Shots Fired','Shots Hit','Deaths','Melee Kills','Stims Used','Samples Extracted','Stratagems Used','clan_name']:
+                stats_row.setdefault(k, 'N/A')
+            self.shared_data.players_data.append(stats_row)
+            # Rebuild confirmation embed
+            embed = build_single_embed(self.shared_data.players_data, self.shared_data.submitter_player_name)
+            try:
+                await self.shared_data.message.edit(embeds=[embed], view=self.shared_data.view)
+            except Exception:
+                pass
+            await interaction.response.send_message(f"Registered {name_val} and added to this mission.", ephemeral=True)
+        except Exception as e:
+            logger.error(f"Error registering missing player: {e}")
+            try:
+                await interaction.response.send_message("Registration failed.", ephemeral=True)
             except Exception:
                 pass
 
@@ -475,6 +597,8 @@ class ExtractCog(commands.Cog):
                             player['clan_name'] = "N/A"
                     else:
                         logger.info(f"No match for OCR name '{ocr_name}'. Marking as unregistered.")
+                        # Preserve the OCR read for later registration
+                        player['unregistered_name'] = cleaned_ocr or ocr_name
                         player['player_name'] = None
                         player['discord_id'] = None
                         player['discord_server_id'] = None
@@ -484,6 +608,7 @@ class ExtractCog(commands.Cog):
                     player['discord_id'] = None
                     player['discord_server_id'] = None
                     player['clan_name'] = "N/A"
+            missing_players = [p.copy() for p in players_data if not p.get('player_name') and p.get('unregistered_name')]
             players_data = [p for p in players_data if p.get('player_name')]
             logger.info(f"After matching against DB, {len(players_data)} registered players remain.")
             # Relaxed rule: accept as long as at least one registered player is present
@@ -531,7 +656,8 @@ class ExtractCog(commands.Cog):
                 registered_users,
                 monitor_channel_id,
                 screenshot_bytes=img_bytes,
-                screenshot_filename=image.filename
+                screenshot_filename=image.filename,
+                missing_players=missing_players
             )
             view = ConfirmationView(shared_data, self.bot)
             shared_data.view = view

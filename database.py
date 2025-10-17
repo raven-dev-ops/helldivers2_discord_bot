@@ -173,6 +173,22 @@ async def get_registered_user_by_discord_id(discord_id: int) -> Optional[Dict[st
         logger.error(f"Error fetching user for discord_id {discord_id}: {e}")
         return None
 
+async def upsert_registered_user(discord_id: int, discord_server_id: int, player_name: str) -> bool:
+    """
+    Create or update a registration entry in the Alliance collection.
+    Ensures (discord_id, discord_server_id) unique pair and sets the player_name.
+    """
+    try:
+        await get_mongo_client()
+        filt = {"discord_id": int(discord_id), "discord_server_id": int(discord_server_id)}
+        update = {"$set": {"player_name": str(player_name)}}
+        await registration_collection.update_one(filt, update, upsert=True)
+        logger.info(f"Upserted registration for discord_id={discord_id} in server {discord_server_id} as '{player_name}'.")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to upsert registration for discord_id={discord_id}, server={discord_server_id}: {e}")
+        return False
+
 ################################################
 # FUZZY MATCHING (LENGTH-AWARE + RATIO)
 ################################################
