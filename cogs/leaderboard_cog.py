@@ -218,8 +218,21 @@ class LeaderboardCog(commands.Cog):
                 logger.error(f"Failed to assign Class A role to {discord_id}: {e}")
 
     async def ensure_leaderboard_channel(self, guild: discord.Guild):
-        # Try to get channel
-        channel = next((c for c in guild.text_channels if c.name in ALTERNATE_LEADERBOARD_NAMES), None)
+        # Try to get channel by stored ID first, then by name
+        channel = None
+        try:
+            if hasattr(self.bot, 'mongo_db'):
+                server_listing = self.bot.mongo_db['Server_Listing']
+                doc = await server_listing.find_one({"discord_server_id": guild.id}, {"leaderboard_channel_id": 1})
+                lb_id = (doc or {}).get("leaderboard_channel_id")
+                if lb_id:
+                    ch = guild.get_channel(int(lb_id))
+                    if isinstance(ch, discord.TextChannel):
+                        channel = ch
+        except Exception:
+            pass
+        if channel is None:
+            channel = next((c for c in guild.text_channels if c.name in ALTERNATE_LEADERBOARD_NAMES), None)
         category = discord.utils.get(guild.categories, name=CATEGORY_NAME)
         overwrites = {
             guild.me: discord.PermissionOverwrite(send_messages=True, embed_links=True, attach_files=True, manage_messages=True)
@@ -230,7 +243,7 @@ class LeaderboardCog(commands.Cog):
         if not channel and guild.me.guild_permissions.manage_channels:
             channel = await guild.create_text_channel(
                 LEADERBOARD_CHANNEL_NAME, category=category, overwrites=overwrites)
-        # Update overwrites on existing channel to ensure visibility
+        # Update overwrites on existing channel to ensure visibility and correct naming
         elif channel:
             changed = False
             # Normalize name to the expected one

@@ -167,9 +167,21 @@ class GuildManagementCog(commands.Cog):
 
         logging.info(f"Cleaning extraneous channels in category '{category.name}' (ID: {category.id}) for guild '{guild.name}'.")
         channels_in_category = list(category.channels)
+        # Safety: Never delete channels whose IDs are stored in Server_Listing
+        safe_ids = set()
+        try:
+            server_listing_coll = self.bot.mongo_db['Server_Listing']
+            doc = await server_listing_coll.find_one({"discord_server_id": guild.id})
+            if doc:
+                for k in ("gpt_channel_id", "monitor_channel_id", "leaderboard_channel_id"):
+                    cid = doc.get(k)
+                    if isinstance(cid, int):
+                        safe_ids.add(cid)
+        except Exception:
+            pass
         for channel in channels_in_category:
             if isinstance(channel, discord.TextChannel):
-                if channel.name not in target_channel_names:
+                if (channel.name not in target_channel_names) and (channel.id not in safe_ids):
                     if channel.permissions_for(guild.me).manage_channels:
                         try:
                             logging.info(f"Deleting extraneous channel '{channel.name}' (ID: {channel.id}) in category '{category.name}'.")
