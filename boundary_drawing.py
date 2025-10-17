@@ -142,23 +142,32 @@ def define_regions(image_shape=None):
         if is_close_enough(w, h, 1280, 800):
             chosen_data = KNOWN_RESOLUTIONS[(1280, 800)]
             base_width, base_height = (1280, 800)
+            scale_x = float(w) / base_width
+            scale_y = float(h) / base_height
+            x_pad = 0
             logger.error("USING 1280x800 BOUNDARIES (CLOSE ENOUGH)")
         # Check 1920x1080 "close enough"
         elif is_close_enough(w, h, 1920, 1080):
             chosen_data = KNOWN_RESOLUTIONS[(1920, 1080)]
             base_width, base_height = (1920, 1080)
+            scale_x = float(w) / base_width
+            scale_y = float(h) / base_height
+            x_pad = 0
             logger.error("USING 1920x1080 BOUNDARIES (CLOSE ENOUGH)")
         else:
-            # fallback: scale from 1920x1080
+            # Letterbox-aware fallback from 1920x1080: scale by height, pad X
             chosen_data = KNOWN_RESOLUTIONS[(1920, 1080)]
             base_width, base_height = (1920, 1080)
+            # Uniform scale based on height to preserve aspect of UI
+            scale = float(h) / base_height
+            # Horizontal padding (letterbox) when the image is wider than 16:9
+            effective_w = int(base_width * scale)
+            x_pad = max(0, int((w - effective_w) // 2))
+            scale_x = scale_y = scale
             logger.warning(
-                f"Image is {w}x{h}, not close to 1280x800 or 1920x1080. "
-                "Falling back to 1920x1080 with scaling."
+                "Using letterbox-aware fallback: scale=%s, x_pad=%s for image %sx%s",
+                f"{scale:.4f}", x_pad, w, h
             )
-
-        scale_x = float(w) / base_width
-        scale_y = float(h) / base_height
 
     base_regions = chosen_data['regions']
     chosen_player_offset = chosen_data['offset']
@@ -178,6 +187,14 @@ def define_regions(image_shape=None):
             top    = int(region_no_scale[1] * scale_y)
             right  = int(region_no_scale[2] * scale_x)
             bottom = int(region_no_scale[3] * scale_y)
+
+            # Apply horizontal padding (for ultrawide letterboxing)
+            try:
+                left += x_pad
+                right += x_pad
+            except NameError:
+                # x_pad defined only in letterbox-aware branch; ignore otherwise
+                pass
 
             label = f"P{player_index + 1} {key}"
             regions[label] = (left, top, right, bottom)
