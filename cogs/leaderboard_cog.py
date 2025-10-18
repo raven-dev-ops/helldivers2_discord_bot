@@ -313,104 +313,137 @@ class LeaderboardCog(commands.Cog):
 
             query = {"submitted_at": {"$gte": start_of_month, "$lt": end_of_month}}
 
-            servers = await alliance_collection.find({}, {"discord_server_id": 1, "server_name": 1}).to_list(None)
-            server_map = {str(s['discord_server_id']): s['server_name'] for s in servers if 'discord_server_id' in s and 'server_name' in s}
-
             def to_int(v, default=0):
                 try:
-                    # handle "", None, numeric strings, etc.
                     return int(v) if v not in (None, "") else default
                 except Exception:
-                    return default
+                    try:
+                        return int(float(v))
+                    except Exception:
+                        return default
 
+            # Aggregate by Discord ID instead of player_name
             players = defaultdict(lambda: {
                 "melee_kills": 0, "kills": 0, "deaths": 0,
                 "shots_fired": 0, "shots_hit": 0,
                 "stims_used": 0, "samples_extracted": 0, "stratagems_used": 0,
-                "games_played": 0, "Clan": "Unknown Clan",
-                "discord_id": None, "discord_server_id": None
+                "games_played": 0,
+                "server_counts": defaultdict(int),  # guild id -> games
             })
 
             all_stats = await stats_collection.find(query).to_list(None)
 
             for doc in all_stats:
-                name = doc.get('player_name')
-                if not name:
+                did = doc.get('discord_id')
+                if did in (None, ""):
+                    # Skip rows that are not linked to a Discord account
+                    continue
+                try:
+                    did_key = str(did)
+                except Exception:
                     continue
 
-                players[name]["melee_kills"]       += to_int(doc.get('Melee Kills'))
-                players[name]["kills"]             += to_int(doc.get('Kills'))
-                players[name]["deaths"]            += to_int(doc.get('Deaths'))
-                players[name]["shots_fired"]       += to_int(doc.get('Shots Fired'))
-                players[name]["shots_hit"]         += to_int(doc.get('Shots Hit'))
-                players[name]["stims_used"]        += to_int(doc.get('Stims Used'))
-                players[name]["samples_extracted"] += to_int(doc.get('Samples Extracted'))
-                players[name]["stratagems_used"]   += to_int(doc.get('Stratagems Used'))
-                players[name]["games_played"]      += 1
-
-                discord_id = doc.get('discord_id')
-                if discord_id and players[name].get("discord_id") is None:
-                    players[name]["discord_id"] = str(discord_id)
+                players[did_key]["melee_kills"]       += to_int(doc.get('Melee Kills'))
+                players[did_key]["kills"]             += to_int(doc.get('Kills'))
+                players[did_key]["deaths"]            += to_int(doc.get('Deaths'))
+                players[did_key]["shots_fired"]       += to_int(doc.get('Shots Fired'))
+                players[did_key]["shots_hit"]         += to_int(doc.get('Shots Hit'))
+                players[did_key]["stims_used"]        += to_int(doc.get('Stims Used'))
+                players[did_key]["samples_extracted"] += to_int(doc.get('Samples Extracted'))
+                players[did_key]["stratagems_used"]   += to_int(doc.get('Stratagems Used'))
+                players[did_key]["games_played"]      += 1
 
                 server_id = doc.get('discord_server_id')
                 if server_id is not None:
-                    players[name]["discord_server_id"] = int(server_id)
-                    server_id_str = str(server_id)
-                    if server_id_str in server_map:
-                        players[name]["Clan"] = server_map[server_id_str]
+                    try:
+                        sid = int(server_id)
+                        players[did_key]["server_counts"][sid] += 1
+                    except Exception:
+                        pass
 
-            # Build a lookup of ship names from Alliance for (player_name, discord_server_id)
-            ship_lookup = {}
-            try:
-                names = []
-                servers_set = set()
-                for pname, d in players.items():
-                    names.append(pname)
-                    if d.get("discord_server_id") is not None:
-                        servers_set.add(int(d["discord_server_id"]))
-                if names and servers_set:
-                    cursor = alliance_collection.find(
-                        {"player_name": {"$in": list(set(names))}, "discord_server_id": {"$in": list(servers_set)}},
-                        {"player_name": 1, "discord_server_id": 1, "ship_name": 1}
-                    )
-                    docs = await cursor.to_list(None)
-                    for doc in docs:
-                        ship = doc.get("ship_name")
-                        if ship:
-                            try:
-                                key = (doc.get("player_name"), int(doc.get("discord_server_id")))
-                                ship_lookup[key] = ship
-                            except Exception:
-                                pass
-            except Exception as e:
-                logger.warning(f"Failed to build ship name lookup for leaderboard: {e}")
+            if not players:
+                return []
+
+            # Determine a primary server per Discord ID (the guild with most games this month)
+            primary_server_for = {}
+            for did_key, agg in players.items():
+                if agg["server_counts"]:
+                    # Pick the server with the highest games count; tie-breaker: lowest guild id
+                    primary = sorted(agg["server_counts"].items(), key=lambda kv: (-kv[1], kv[0]))[0][0]
+                    primary_server_for[did_key] = primary
+                else:
+                    primary_server_for[did_key] = None
+
+            # Fetch registration profiles for names/ship by discord_id
+            did_ints = []
+            for did_key in players.keys():
+                try:
+                    did_ints.append(int(did_key))
+                except Exception:
+                    pass
+            profiles = {}
+            if did_ints:
+                cursor = alliance_collection.find(
+                    {"discord_id": {"$in": did_ints}},
+                    {"discord_id": 1, "player_name": 1, "discord_server_id": 1, "ship_name": 1, "server_name": 1}
+                )
+                prof_docs = await cursor.to_list(None)
+                for d in prof_docs:
+                    try:
+                        k = str(d.get("discord_id"))
+                        profiles.setdefault(k, []).append(d)
+                    except Exception:
+                        pass
+
+            def choose_profile(did_key: str):
+                choices = profiles.get(did_key) or []
+                if not choices:
+                    return None
+                primary_sid = primary_server_for.get(did_key)
+                if primary_sid is not None:
+                    for c in choices:
+                        try:
+                            if int(c.get("discord_server_id")) == int(primary_sid):
+                                return c
+                        except Exception:
+                            pass
+                return choices[0]
 
             leaderboard = []
-            for name, d in players.items():
-                average_kills = d["kills"] / d["games_played"] if d["games_played"] else 0.0
-                average_accuracy = (d["shots_hit"] / d["shots_fired"] * 100) if d["shots_fired"] > 0 else 0.0
+            for did_key, agg in players.items():
+                average_kills = (agg["kills"] / agg["games_played"]) if agg["games_played"] else 0.0
+                average_accuracy = (agg["shots_hit"] / agg["shots_fired"] * 100) if agg["shots_fired"] > 0 else 0.0
+                prof = choose_profile(did_key)
+                player_name = (prof.get("player_name") if prof else None) or f"User {did_key}"
+                ship_name = (prof.get("ship_name") if prof else None)
+                discord_server_id = None
+                try:
+                    discord_server_id = int(prof.get("discord_server_id")) if prof and prof.get("discord_server_id") is not None else primary_server_for.get(did_key)
+                except Exception:
+                    discord_server_id = primary_server_for.get(did_key)
+
                 leaderboard.append({
-                    "player_name": name,
-                    "melee_kills": d["melee_kills"],
-                    "kills": d["kills"],
-                    "deaths": d["deaths"],
-                    "shots_fired": d["shots_fired"],
-                    "shots_hit": d["shots_hit"],
-                    "stims_used": d["stims_used"],
-                    "samples_extracted": d["samples_extracted"],
-                    "stratagems_used": d["stratagems_used"],
-                    "games_played": d["games_played"],
-                    "Clan": d["Clan"],
+                    "player_name": player_name,
+                    "melee_kills": agg["melee_kills"],
+                    "kills": agg["kills"],
+                    "deaths": agg["deaths"],
+                    "shots_fired": agg["shots_fired"],
+                    "shots_hit": agg["shots_hit"],
+                    "stims_used": agg["stims_used"],
+                    "samples_extracted": agg["samples_extracted"],
+                    "stratagems_used": agg["stratagems_used"],
+                    "games_played": agg["games_played"],
+                    "Clan": prof.get("server_name") if prof and prof.get("server_name") else "Unknown Clan",
                     "average_kills": average_kills,
                     "average_accuracy": average_accuracy,
-                    "least_deaths": -d["deaths"],  # negative for sorting
-                    "discord_id": d.get("discord_id"),
-                    "discord_server_id": d.get("discord_server_id"),
-                    "ship_name": ship_lookup.get((name, d.get("discord_server_id")))
+                    "least_deaths": -agg["deaths"],  # negative for sorting
+                    "discord_id": did_key,
+                    "discord_server_id": discord_server_id,
+                    "ship_name": ship_name,
                 })
 
             if stat_key == "least_deaths":
-                leaderboard.sort(key=lambda x: (x[stat_key], -x["games_played"]))  # fewest deaths, most games
+                leaderboard.sort(key=lambda x: (x[stat_key], -x["games_played"]))
             else:
                 leaderboard.sort(key=lambda x: (-x[stat_key], -x["games_played"]))
 
