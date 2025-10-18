@@ -421,7 +421,9 @@ class LeaderboardCog(commands.Cog):
 
     async def build_leaderboard_embeds(self, leaderboard_data, title, stat_key):
         embeds = []
-        batch_size = 25  # up to 25 entries per page
+        # We add 2 static fields per embed (site link + promotion date),
+        # so cap player fields at 23 to satisfy Discord's 25-field max.
+        batch_size = 23
 
         if not leaderboard_data:
             return []
