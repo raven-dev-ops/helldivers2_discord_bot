@@ -66,6 +66,7 @@ channel_id = _get_int_env('BOT_CHANNEL_ID')
 class_a_role_id = _get_int_env('CLASS_A_ROLE_ID')
 guild_id = _get_int_env('GUILD_ID')
 sos_network_id = _get_int_env('SOS_NETWORK_ID')
+lfg_ping_role_id = _get_int_env('LFG_PING_ROLE_ID')
 
 # Notes:
 # Some cogs (e.g., Extract) fetch server-specific IDs from the database,

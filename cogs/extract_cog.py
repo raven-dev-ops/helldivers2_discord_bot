@@ -29,6 +29,7 @@ from config import (
     MATCH_SCORE_THRESHOLD,
     class_a_role_id,
     class_b_role_id,
+    lfg_ping_role_id,
 )
 from ocr_processing import process_for_ocr, clean_ocr_result
 from boundary_drawing import define_regions, draw_boundaries
@@ -395,6 +396,33 @@ class RegisterPlayerModal(discord.ui.Modal, title="Register Player"):
             if not ok:
                 await interaction.response.send_message("Failed to register player in database.", ephemeral=True)
                 return
+            # Try to assign the LFG PING! role to the registered member (if present in guild)
+            try:
+                guild = interaction.guild or self.bot.get_guild(int(self.guild_id))
+                member = None
+                if guild:
+                    member = guild.get_member(int(did)) or None
+                    if member is None:
+                        try:
+                            member = await guild.fetch_member(int(did))
+                        except Exception:
+                            member = None
+                role = None
+                if guild:
+                    try:
+                        if lfg_ping_role_id is not None:
+                            role = guild.get_role(int(lfg_ping_role_id))
+                    except Exception:
+                        role = None
+                    if role is None:
+                        role = discord.utils.get(guild.roles, name="LFG PING!")
+                if guild and member and role and all(r.id != role.id for r in member.roles):
+                    await member.add_roles(role, reason="Registration: grant LFG PING! role")
+                    logger.info(f"Assigned LFG PING! role to member {member.id} in guild {guild.id}.")
+                elif role is None:
+                    logger.warning("LFG PING! role not found by ID or name; skipping assignment.")
+            except Exception as role_e:
+                logger.warning(f"Failed to assign LFG PING! role for registered member {did}: {role_e}")
             # Transform missing entry into a registered player row
             mp = {}
             try:

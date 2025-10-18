@@ -3,6 +3,7 @@ from discord.ext import commands
 from datetime import datetime
 import logging
 import asyncio
+from config import lfg_ping_role_id
 
 class RegisterModal(discord.ui.Modal, title="Register"):
     """
@@ -69,6 +70,24 @@ class RegisterModal(discord.ui.Modal, title="Register"):
                 logging.info(f"User '{player_name}' registered in Alliance collection via upsert.")
             else:
                 logging.info(f"User '{player_name}' Alliance registration updated without creating a duplicate.")
+
+            # Try to assign the LFG PING! role on successful registration
+            try:
+                role = None
+                try:
+                    if lfg_ping_role_id is not None:
+                        role = interaction.guild.get_role(int(lfg_ping_role_id))
+                except Exception:
+                    role = None
+                if role is None:
+                    role = discord.utils.get(interaction.guild.roles, name="LFG PING!")
+                if role is not None and all(r.id != role.id for r in interaction.user.roles):
+                    await interaction.user.add_roles(role, reason="Registration: grant LFG PING! role")
+                    logging.info(f"Assigned LFG PING! role to {interaction.user} ({interaction.user.id}).")
+                elif role is None:
+                    logging.warning("LFG PING! role not found by ID or name; skipping assignment.")
+            except Exception as role_e:
+                logging.warning(f"Failed to assign LFG PING! role during registration: {role_e}")
 
             msg = f"Registration successful! Welcome, **{player_name}**!"
             if ship_name:

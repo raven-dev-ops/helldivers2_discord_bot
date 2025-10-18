@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import logging
-from config import class_b_role_id, guild_id
+from config import guild_id
 from utils import log_to_monitor_channel
 from datetime import datetime
 
@@ -11,21 +11,11 @@ class ArrivalCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        """Assign role (if configured) and register/upsert the member. No welcome messages."""
+        """Register/upsert the member on join. No welcome messages or auto-roles."""
         try:
             # Restrict welcomes to the configured guild only
             if not guild_id or member.guild.id != guild_id:
                 return
-
-            # Assign the Class B Citizen role
-            role = member.guild.get_role(class_b_role_id)
-            if role:
-                await member.add_roles(role, reason="Auto-welcome role assignment")
-                logging.info(f"[ArrivalCog] Assigned role '{role.name}' to {member.display_name}.")
-            else:
-                logging.error(
-                    f"[ArrivalCog] Role {class_b_role_id} not found in guild {member.guild.id}."
-                )
 
             # Register the user in the Alliance collection
             alliance_collection = self.bot.mongo_db['Alliance']
