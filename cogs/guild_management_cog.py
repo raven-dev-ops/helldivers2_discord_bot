@@ -215,7 +215,7 @@ class GuildManagementCog(commands.Cog):
             gpt_channel_overwrites[class_b] = discord.PermissionOverwrite(
                 view_channel=True,
                 read_message_history=True,
-                send_messages=False,
+                send_messages=True,
                 add_reactions=False,
             )
         gpt_channel = await self._find_and_clean_specific_channel(
@@ -265,7 +265,7 @@ class GuildManagementCog(commands.Cog):
             monitor_overwrites[class_b] = discord.PermissionOverwrite(
                 view_channel=True,
                 read_message_history=True,
-                send_messages=False,
+                send_messages=True,
                 add_reactions=False,
             )
 
@@ -288,7 +288,7 @@ class GuildManagementCog(commands.Cog):
             leaderboard_overwrites[class_b] = discord.PermissionOverwrite(
                 view_channel=True,
                 read_message_history=True,
-                send_messages=False,
+                send_messages=True,
                 add_reactions=False,
             )
 
