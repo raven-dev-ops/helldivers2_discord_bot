@@ -1,7 +1,7 @@
 Helldivers 2 Discord Bot - LFG & Mission Stats
 ==============================================
 
-This project is a Discord bot for Helldivers 2 communities that:
+This project is an open-source Discord bot for Helldivers 2 communities that:
 
 - Provides a Clan Hub menu for registration and mission uploads
 - OCRs scoreboard screenshots into structured stats
@@ -267,7 +267,7 @@ Project Structure
 - `tests/` - automated tests
 - `PATCH.md` - Clan Menu User Guide and FAQ (player-facing explanation)
 - `privacy_policy.md` - privacy policy for hosting this bot
-- `terms_of_service.md` - terms of service and usage conditions
+- `terms_of_service.md` - terms of service and usage conditions (template for self-hosted deployments)
 - `ads.txt` - advertising configuration for web hosting contexts (not used by the Discord bot itself)
 - `gpt_network.png`, `sos_leaderboard.png` - example images for documentation or embeds
 
@@ -284,10 +284,26 @@ Notes and Disclaimers
 If you extend or modify the bot, consider updating this README and the user-facing guide in `PATCH.md` to reflect your changes.
 
 
+Contributing
+------------
+
+Contributions are welcome. To propose changes:
+
+- Fork this repository and create a feature branch.
+- Make your changes, keeping to the existing code style and structure.
+- Run the test suite with `pytest` to ensure everything still passes.
+- Open a pull request describing the change, motivation, and any relevant Discord / MongoDB configuration details.
+
+Bug reports and feature requests can also be opened as issues, ideally including logs, stack traces, and steps to reproduce.
+
+See `CONTRIBUTING.md` for detailed contributor guidelines, setup instructions, and expectations for tests and pull requests.
+
+
 License
 -------
 
-This project is licensed under a proprietary, "all rights reserved" license.
-See `LICENSE` for details. In short: you may not use, copy, modify, or
-redistribute this code without the repository owner's explicit written
-permission.
+This project is open source software released under the MIT License.
+See `LICENSE` for the full text. In short: you may use, copy, modify,
+and redistribute this code (including self-hosting your own instance)
+provided that the copyright and license notice are included in
+copies or substantial portions of the Software.

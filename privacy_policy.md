@@ -5,6 +5,8 @@ Last updated: 2025-10-17
 
 This Privacy Policy describes how this Helldivers 2 Discord bot (the "Bot") processes information when it is invited to and used on a Discord server (the "Server"). The Bot is operated by the Server owner and/or bot maintainer (collectively, "we", "us", or "our").
 
+The Bot's source code is open source and released under the MIT License. If you self-host your own instance of the Bot, you are the controller for any data processed by that deployment and should treat this policy as a template to adapt to your community and jurisdiction.
+
 By using the Bot, you agree to this Privacy Policy. If you do not agree, do not use the Bot.
 
 
@@ -165,4 +167,3 @@ We may update this Privacy Policy from time to time. When we do, we will update 
 If you have questions about this Privacy Policy or how the Bot handles your data, contact the Server owner or Bot maintainer through Discord (for example, via the monitor channel or an administrator).
 
 If you are hosting your own copy of this Bot, you should customize this Privacy Policy (including contact information and retention practices) to match your deployment, your jurisdiction, and your community's needs. Nothing in this document constitutes legal advice.
-

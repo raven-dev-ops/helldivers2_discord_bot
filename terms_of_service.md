@@ -5,7 +5,7 @@ Last updated: 2025-10-17
 
 These Terms of Service ("Terms") govern your use of this Helldivers 2 Discord bot (the "Bot") on any Discord server (the "Server") where it is installed. By using the Bot, you agree to these Terms. If you do not agree, do not use the Bot.
 
-The Bot is operated by the Server owner and/or bot maintainer (collectively, "we", "us", or "our").
+The Bot is operated by the Server owner and/or bot maintainer (collectively, "we", "us", or "our"). The underlying source code is open source and released under the MIT License; these Terms are provided as a template for anyone self-hosting their own instance and should be customized to match your deployment and local legal requirements.
 
 
 1. Relationship to Discord and Helldivers 2
@@ -124,4 +124,3 @@ Your continued use of the Bot after changes become effective constitutes your ac
 Questions about these Terms or the Bot can be directed to the Server owner or Bot maintainer via Discord (for example, by messaging an administrator or using any designated support channels).
 
 If you host your own copy of this Bot, you should customize these Terms (including contact details and any jurisdiction-specific clauses) to match your deployment and local legal requirements. Nothing in this document constitutes legal advice.
-
