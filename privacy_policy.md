@@ -152,8 +152,6 @@ The Bot depends on several external services and libraries, including but not li
 
 These third parties have their own privacy policies and terms. We encourage you to review those documents separately.
 
-The `ads.txt` file in this repository is intended for use with web hosting and does not mean the Discord bot itself serves ads inside Discord.
-
 
 9. Changes to This Policy
 -------------------------

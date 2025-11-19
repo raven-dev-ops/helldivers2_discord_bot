@@ -15,14 +15,14 @@ Getting Started
 
   ```bash
   git clone <this-repo-url>
-  cd helldivers2_discord_bot_LFG_v2
+  cd <repo-folder>
   python -m venv .venv
   .venv\Scripts\activate  # on Windows
   # or: source .venv/bin/activate  # on Linux/macOS
   pip install -r requirements.txt
   ```
 
-- Create a `.env` file based on the examples in `README.md` and run the bot with:
+- Create a `.env` file (for example by copying `.env.example`) based on the examples in `README.md` and run the bot with:
 
   ```bash
   python main.py
@@ -90,4 +90,3 @@ Code of Conduct
 ---------------
 
 Please be respectful and constructive in all interactions. Treat other contributors and server owners as collaborators. The project follows the same general expectations as the Discord Community Guidelines and developer policies.
-

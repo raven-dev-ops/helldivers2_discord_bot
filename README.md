@@ -130,8 +130,8 @@ Local Development
 1. Clone and install dependencies:
 
    ```bash
-   git clone <this-repo-url>
-   cd helldivers2_discord_bot_LFG_v2
+  git clone <this-repo-url>
+  cd <repo-folder>
    python -m venv .venv
    .venv\Scripts\activate  # on Windows
    pip install -r requirements.txt
@@ -139,20 +139,13 @@ Local Development
 
 2. Create a `.env` file:
 
-   Define at least:
+   Copy the example file and fill in values:
 
-   ```env
-   DISCORD_TOKEN=your_discord_bot_token
-   MONGODB_URI=your_mongodb_connection_string
-   GUILD_ID=123456789012345678
-   BOT_CHANNEL_ID=123456789012345678
-   MONITOR_CHANNEL_ID=123456789012345678
-   LEADERBOARD_CHANNEL_ID=123456789012345678
-   CLASS_B_ROLE_ID=123456789012345678
-   LFG_PING_ROLE_ID=123456789012345678
+   ```bash
+   cp .env.example .env  # or copy .env.example to .env on Windows
    ```
 
-   Then add any optional role or channel IDs you plan to use.
+   Then edit `.env` and define at least the required variables described below.
 
 Quick start (.env layout)
 -------------------------
