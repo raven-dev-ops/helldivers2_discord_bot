@@ -7,8 +7,6 @@ from discord.ext import commands
 from motor.motor_asyncio import AsyncIOMotorClient
 from database import create_indexes
 
-logging.basicConfig(level=logging.INFO)
-
 # Add filter to reduce noisy discord reconnect logs
 class DiscordNoiseFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:

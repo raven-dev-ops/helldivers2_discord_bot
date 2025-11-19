@@ -12,8 +12,11 @@ DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 MONGODB_URI = os.getenv('MONGODB_URI')
 DATABASE_NAME = 'GPTHellbot'
 
-# Configure structured logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure structured logging (debug enabled for easier troubleshooting)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
 
 # Environment variable loader with validation
 def load_env_var(var_name, required=True):
@@ -87,4 +90,3 @@ gpt_medal_of_honor_role_id = _get_int_env('GPT_MEDAL_OF_HONOR_ROLE_ID')
 # Some cogs (e.g., Extract) fetch server-specific IDs from the database,
 # while other cogs still rely on environment variables above. This mixed
 # approach is intentional for now and will be unified in a later refactor.
-
